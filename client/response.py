@@ -6,7 +6,7 @@ from enum import Enum
 @dataclass
 class TextDelta:
     content : str
-    def __str__(slef):
+    def __str__(self):
         return self.content
 
 
