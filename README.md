@@ -1,4 +1,4 @@
-# Flux
+# Flux-CLI
 
 An AI agent project built from scratch to understand how Claude Code CLI works, including multi-tool selection, reasoning, and iterative file editing capabilities.
 
