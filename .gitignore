@@ -1,0 +1,24 @@
+# ENVIRONMENT VARIABLES
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Temp runner / editor files
+*.temcoderunner
+tempCodeRunnerFile.py
+*.vscode/
+*.idea/
+*.swp
+
+# Virtual environments
+.venv/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
