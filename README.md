@@ -1,5 +1,7 @@
 # Flux-CLI
 
+> 🚧 **Work In Progress** — Actively being developed as a learning project. APIs and architecture may change.
+
 An AI agent project built from scratch to understand how Claude Code CLI works, including multi-tool selection, reasoning, and iterative file editing capabilities.
 
 ## 🎯 Project Aim
@@ -37,13 +39,30 @@ This project is a **learning initiative** designed to understand and implement c
 - ✅ Generator-based streaming with `yield`
 - ✅ Single entry point for different response modes
 
+### 4. **Agent Core & Event System** (May 24)
+- ✅ `Agent` orchestrator with async context manager support
+- ✅ Event-driven architecture with `AgentEvent` and `AgentEventType`
+- ✅ Event lifecycle: `AGENT_START` → `TEXT_DELTA` × N → `TEXT_COMPLETE` → `AGENT_END`
+- ✅ Error propagation through event system (`AGENT_ERROR`)
+- ✅ Agentic loop that processes LLM responses and yields events
+- ✅ Message context storage for multi-turn conversations (foundation)
+
+### 5. **CLI & Terminal UI** (May 24)
+- ✅ Click-based CLI with command-line argument parsing
+- ✅ Rich terminal output with custom theme styling
+- ✅ Real-time streaming text display with `stream_assistant_delta()`
+- ✅ Assistant response formatting with rule separators
+- ✅ Error handling and display with `style="error"`
+- ✅ Async context manager integration for clean resource management
+
 ## 🚀 In Progress / Future Features
 
-### Phase 2: Agent Core
+### Phase 2: Advanced Agent Features *(Next)*
+- [ ] Multi-turn conversation context (remember previous messages)
 - [ ] Tool registry system (define available tools)
-- [ ] Tool selection logic (reasoning about which tool to use)
+- [ ] Tool selection logic (LLM decides which tool to use)
 - [ ] Function calling from LLM responses
-- [ ] Multi-step orchestration
+- [ ] Multi-step task orchestration
 
 ### Phase 3: Code Manipulation
 - [ ] File reading and analysis
@@ -62,14 +81,17 @@ This project is a **learning initiative** designed to understand and implement c
 
 ```
 flux/
-├── main.py                  # Entry point
+├── main.py                  # CLI entry point with Click integration
 ├── client/
-│   ├── llm_client.py       # AsyncOpenAI wrapper with streaming support
-│   └── response.py         # Response event types and structures
+│   ├── llm_client.py       # AsyncOpenAI wrapper with streaming, retry logic
+│   └── response.py         # StreamEvent, TextDelta, TokenUsage types
 ├── agent/
-│   └── agent.py            # (Coming soon) Core agent orchestration
-├── tools/                  # (Coming soon) Tool registry and execution
-├── .env                    # API keys and configuration (not committed)
+│   ├── agent.py            # Agent orchestrator with agentic loops
+│   └── events.py           # AgentEvent, AgentEventType definitions
+├── ui/
+│   └── tui.py              # Terminal UI with Rich library (themes, formatting)
+├── .env                    # API keys and configuration (git-ignored)
+├── .gitignore
 └── README.md
 ```
 
@@ -79,20 +101,62 @@ flux/
 ```
 LLMClient
 ├── get_client()           # Lazy initialization of AsyncOpenAI
-├── chat_completion()      # Main entry point (streaming/non-streaming)
-├── _stream_response()     # Yields tokens in real-time
-├── _non_stream_response() # Yields complete response
-└── close()                # Cleanup
+├── chat_completion()      # Main entry point with retry logic
+│   ├── Retry on RateLimitError (exponential backoff)
+│   ├── Retry on APIConnectionError (exponential backoff)
+│   └── Fail immediately on APIError
+├── _stream_response()     # Yields TEXT_DELTA events in real-time
+├── _non_stream_response() # Returns complete response at once
+└── close()                # Async cleanup
 ```
 
-### Response Events
+### Agent Class
+```
+Agent
+├── __init__()             # Initializes LLMClient
+├── run(message)           # Main entry point (async generator)
+│   ├── Yields AGENT_START
+│   ├── Calls _agentic_loops()
+│   ├── Yields each event from loop
+│   └── Yields AGENT_END with final_response
+├── _agentic_loops()       # Processes LLM response stream
+│   ├── Sends message to LLMClient
+│   ├── Yields TEXT_DELTA for each chunk
+│   ├── Handles ERROR events
+│   └── Yields TEXT_COMPLETE when done
+├── __aenter__/__aexit__   # Async context manager for cleanup
+└── current_message        # Stores user input for agentic loop
+```
+
+### Event Types & Flow
+```
+AgentEventType (Enum)
+├── AGENT_START      → Agent starting processing
+├── TEXT_DELTA       → Chunk of streamed text
+├── TEXT_COMPLETE    → Full response complete
+├── AGENT_ERROR      → Error occurred
+└── AGENT_END        → Agent finished
+
+AgentEvent (Data Container)
+├── type: AgentEventType
+└── data: dict[str, Any]
+
+Event Creation (Factory Methods)
+├── agent_start(message)          → {type: AGENT_START, data: {message}}
+├── text_delta(content)           → {type: TEXT_DELTA, data: {content}}
+├── text_complete(content)        → {type: TEXT_COMPLETE, data: {content}}
+├── agent_error(error)            → {type: AGENT_ERROR, data: {error}}
+└── agent_end(response, usage)    → {type: AGENT_END, data: {response, usage}}
+```
+
+### Response Events (from LLMClient)
 ```
 StreamEvent
-├── type: EventType (TEXT_DELTA, MESSAGE_COMPLETE, ERROR, etc.)
-├── text_delta: TextDelta (contains content chunks)
-├── finish_reason: str (stop, length, etc.)
-├── usage: TokenUsage (prompt/completion/cache tokens)
-└── error: str (for error events)
+├── type: StreamEventType
+├── text_delta: TextDelta (chunk of content)
+├── finish_reason: str ("stop", "length", etc.)
+├── usage: TokenUsage (token counts)
+└── error: str (error message)
 ```
 
 ## 🔧 Setup & Usage
@@ -128,8 +192,32 @@ OPENROUTER_API_KEY=your_api_key_here
 
 ### Running
 ```bash
-python main.py
+# Basic usage
+python main.py "Hello, how are you?"
+
+# Works with streaming and real-time display
+python main.py "Write a 250 character line about Python"
 ```
+
+## 📝 Recent Updates (May 24, 2026)
+
+### Agent Orchestration System
+- Built the `Agent` class that orchestrates conversations
+- Implemented event-driven communication through `AgentEvent` system
+- Created agentic loops that process LLM responses
+- Integrated async context managers for resource cleanup
+
+### Terminal UI
+- Added Rich library integration for styled terminal output
+- Built custom theme with assistant/user/error/success colors
+- Real-time text streaming display
+- Proper error handling and display
+
+### Debugging & Fixes
+- Fixed import issues (Rich Text from correct module)
+- Resolved unbound variable errors with proper initialization
+- Implemented proper markup-safe error printing
+- Added exponential backoff for API retries
 
 ## 📚 Learning Resources Referenced
 
