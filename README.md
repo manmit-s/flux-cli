@@ -255,6 +255,11 @@ API client is only created when first needed, reducing startup overhead.
 4. **Multi-turn Conversation**: Support context across multiple messages
 5. **File Operations**: Safe read/write operations with diff generation
 
+## 👨‍🏫 Credits & Learning Resources
+
+**Inspired by and learning from:**
+- **[Rivaan Ranawat](https://github.com/RivaanRanawat)** — Tutor and educational content creator
+
 ## 🤝 Contributing
 
 This is a personal learning project, but feel free to fork and experiment!
