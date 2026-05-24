@@ -5,7 +5,8 @@ import dotenv
 from openai import AsyncOpenAI
 from openai import APIConnectionError
 from openai import RateLimitError
-from client.response import EventType, StreamEvent, TextDelta, TokenUsage
+from openai import APIError
+from client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage
 
 dotenv.load_dotenv()
 
@@ -34,7 +35,8 @@ class LLMClient:
         client = self.get_client()
 
         kwargs = {
-            "model" : "google/gemma-4-26b-a4b-it:free",
+            # "model" : "google/gemma-4-26b-a4b-it:free",
+            "model" : "liquid/lfm-2.5-1.2b-instruct:free",
             "messages" : messages,
             "stream" : stream,
         }
@@ -57,7 +59,7 @@ class LLMClient:
                 
                 else:
                     yield StreamEvent(
-                        type = EventType.ERROR,
+                        type = StreamEventType.ERROR,
                         error = f"Rate Limit Exceeded: {e}"
                     )
                     return
@@ -69,14 +71,14 @@ class LLMClient:
                 
                 else:
                     yield StreamEvent(
-                        type = EventType.ERROR,
+                        type = StreamEventType.ERROR,
                         error = f"Connection Error: {e}"
                     )
                     return
 
             except APIError as e:
                 yield StreamEvent(
-                    type = EventType.ERROR,
+                    type = StreamEventType.ERROR,
                     error = f"Connection Error: {e}"
                 )
                 return
@@ -106,14 +108,14 @@ class LLMClient:
 
             if delta.content:
                 yield StreamEvent(
-                    type = EventType.TEXT_DELTA,
+                    type = StreamEventType.TEXT_DELTA,
                     text_delta = TextDelta(delta.content)
                 )
 
         yield StreamEvent(
-            type=EventType.MESSAGE_COMPLETE,
+            type = StreamEventType.MESSAGE_COMPLETE,
             finish_reason=finish_reason,
-            usage=usage
+            usage = usage
         )
     
     async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]) -> StreamEvent:
@@ -135,7 +137,7 @@ class LLMClient:
             )
         
         return StreamEvent(
-            type = EventType.MESSAGE_COMPLETE,
+            type = StreamEventType.MESSAGE_COMPLETE,
             text_delta = text_delta,
             finish_reason = choice.finish_reason,
             usage = usage
