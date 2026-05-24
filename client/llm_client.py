@@ -114,7 +114,7 @@ class LLMClient:
 
         yield StreamEvent(
             type = StreamEventType.MESSAGE_COMPLETE,
-            finish_reason=finish_reason,
+            finish_reason = finish_reason,
             usage = usage
         )
     
