@@ -3,8 +3,8 @@ import abc
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from pydantic import ValidationError
-from pydantic import BaseModel
+from pydantic import ValidationError, BaseModel
+from pydantic.json_schema import model_json_schema
 from enum import Enum
 from typing import Any
 
@@ -99,12 +99,12 @@ class Tools(abc.ABC):
             }
 
         if isinstance(schema, dict):
-            result = {
+            result: dict[str, Any] = {
                 'name' : self.name,
                 'description' : self.description
             }
             if 'parameters' in schema:
-                result['parameters'] = schema['paramaters']
+                result['parameters'] = schema['parameters']
 
             else:
                 result["parameters"] = schema
