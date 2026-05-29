@@ -113,4 +113,4 @@ class ReadFileTool(Tools):
                 },
             )
         except Exception as e:
-            return ToolResult.error_result(f"Failes to read file: {e}")
+            return ToolResult.error_result(f"Failed to read file: {e}")
