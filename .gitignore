@@ -22,3 +22,6 @@ tempCodeRunnerFile.py
 # OS-specific
 .DS_Store
 Thumbs.db
+
+#Temporarily ignored
+.github/
