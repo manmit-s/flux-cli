@@ -22,7 +22,7 @@ class MessageItem:
 class ContextManager:
     def __init__(self) -> None:
         self._system_prompt = get_system_prompt()
-        self._model_name = "liquid/lfm-2.5-1.2b-instruct:free"
+        self._model_name = "google/gemma-4-26b-a4b-it:free"
         self._messages: list[MessageItem] = []
 
     def add_user_message(self, content: str) -> None:
@@ -38,13 +38,13 @@ class ContextManager:
         item = MessageItem(
             role = 'assistant',
             content = content or "",
-            token_count = count_tokens(content, self._model_name)
+            token_count = count_tokens(content or "", self._model_name)
         )
 
         self._messages.append(item)
 
 
-    def get_messages(self) -> list[str, Any]:
+    def get_messages(self) -> list[dict[str, Any]]:
         messages = []
 
         if self._system_prompt:
