@@ -1,7 +1,11 @@
 from typing import Any
+from pathlib import Path
 
 from tools.base import ToolInvocation, ToolResult, Tools
 import logging
+
+from tools.builtin import ReadFileTool, get_all_builtin_tools
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +22,7 @@ class ToolRegistry:
 
     def unregister(self, name: str) -> bool:
         if name in self._tools:
-            del self._tools(name)
+            del self._tools[name]
             return True
         
         return False
@@ -62,10 +66,18 @@ class ToolRegistry:
 
             )
             try:
-                await tool.execeute(invocation)
+                await tool.execute(invocation)
             except Exception as e:
                 logger.exception(f"Tool {name} raised an unexpected error")
                 return ToolResult.error_result(
                     f'Internal Error: {str(e)}',
-                    metadata = {'tool_name' : name}
+                    metadata = {'tool_name', name}
                 )
+            
+def create_default_registry() -> ToolRegistry:
+    registry = ToolRegistry()
+
+    for tool_class in get_all_builtin_tools():
+        registry.register(tool_class())
+
+    return registry
