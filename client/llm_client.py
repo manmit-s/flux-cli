@@ -6,7 +6,7 @@ from openai import AsyncOpenAI
 from openai import APIConnectionError
 from openai import RateLimitError
 from openai import APIError
-from client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage
+from client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage, ToolCallDelta
 
 dotenv.load_dotenv()
 
@@ -31,15 +31,42 @@ class LLMClient:
             await self._client.close()
             self._client = None
 
-    async def chat_completion(self, messages: list[dict[str, Any]], stream: bool = True) -> AsyncGenerator[StreamEvent, None]:
+    def _build_tools(self, tools: list[dict[str, Any]]):
+        return [
+            {
+                'type' : 'function',
+                'function' : {
+                    'name' : tool['name'],
+                    'description' : tool.get('description', ""),
+                    'parameters' : tool.get(
+                        'parameters', 
+                        {
+                            'type' : 'object',
+                            'properties' : {},
+                        },
+                    ),
+                },
+            }
+            for tool in tools
+        ]
+
+    async def chat_completion(self, 
+                              messages: list[dict[str, Any]], 
+                              tools: list[dict[str, Any]] | None = None, 
+                              stream: bool = True,) -> AsyncGenerator[StreamEvent, None]:
         client = self.get_client()
 
         kwargs = {
             # "model" : "google/gemma-4-26b-a4b-it:free",
-            "model" : "liquid/lfm-2.5-1.2b-instruct:free",
+            "model" : "google/gemma-4-26b-a4b-it:free",
             "messages" : messages,
             "stream" : stream,
         }
+
+        if tools:
+            kwargs['tools'] = self._build_tools(tools)
+            kwargs["tool_choice"] = "auto"
+
         for attempt in range(self._max_retries + 1):
             try:
 
@@ -106,11 +133,36 @@ class LLMClient:
             choice = chunk.choices[0]
             delta = choice.delta
 
+            if choice.finish_reason:
+                finish_reason = choice.finish_reason
+
             if delta.content:
                 yield StreamEvent(
                     type = StreamEventType.TEXT_DELTA,
                     text_delta = TextDelta(delta.content)
                 )
+
+            if delta.tool_calls:
+                for tool_call_delta in delta.tool_calls:
+                    idx = tool_call_delta.index
+                    
+                    if idx not in tool_calls:
+                        tool_calls[idx] = {
+                            "id": tool_call_delta.id or "",
+                            "name": "",
+                            "arguments": ""
+                        }
+
+                        if tool_call_delta.function:
+                            if tool_call_delta.function.name:
+                                tool_calls[idx]['name'] = tool_call_delta.function.name
+                                yield StreamEvent{
+                                    type = StreamEventType.TOOL_CALL_START,
+                                    tool_call_delta=ToolCallDelta(
+                                        call_id=tool_calls[idx]['id'],
+                                        name=tool_call_delta.function.name,
+                                    ),
+                                }
 
         yield StreamEvent(
             type = StreamEventType.MESSAGE_COMPLETE,
