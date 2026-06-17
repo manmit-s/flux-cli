@@ -77,7 +77,7 @@ class Tools(abc.ABC):
         raise NotImplementedError("Tool must define schema property or class attribute")
     
     @abc.abstractmethod
-    async def execeute(self, invocation: ToolInvocation) -> ToolResult:
+    async def execute(self, invocation: ToolInvocation) -> ToolResult:
         pass
 
     def validate_params(self, params: dict[str, Any]) -> list[str]:
