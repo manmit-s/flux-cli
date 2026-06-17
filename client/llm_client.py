@@ -161,6 +161,7 @@ class LLMClient:
                                     tool_call_delta=ToolCallDelta(
                                         call_id=tool_calls[idx]['id'],
                                         name=tool_call_delta.function.name,
+#############################Left here##################### 
                                     ),
                                 }
 
