@@ -7,7 +7,10 @@ def get_tokenizer(model: str):
         encoding = tiktoken.get_encoding("cl100k_base")
         return encoding.encode
 
-def count_tokens(text: str, model: str) -> int: 
+def count_tokens(text: str | None, model: str) -> int: 
+    if not text:
+        return 0
+    
     tokenizer = get_tokenizer(model)
 
     if tokenizer:
