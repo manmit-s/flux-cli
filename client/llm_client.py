@@ -209,6 +209,7 @@ class LLMClient:
                     call_id = tc.id,
                     name = tc.function.name,
                     arguments = parse_tool_call_arguments(tc.function.arguments)
+                    ##LEFT HERE###
                 ))
                 
 
