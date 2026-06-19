@@ -56,6 +56,13 @@ class ToolResult:
             output = output,
             **kwargs
         )
+    
+    
+    def to_model_output(self) -> str:
+        if self.success:
+            return self.output
+        
+        return f"Error: {self.error}\n\nOutput:\n{self.output}"
 
 @dataclass
 class ToolConfirmation:
