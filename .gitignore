@@ -25,3 +25,6 @@ Thumbs.db
 
 #Temporarily ignored
 .github/
+
+# AI Code Bridge
+.agent/
