@@ -56,15 +56,9 @@ def main(
         prompt: str | None
 ):   
     cli = CLI() 
-    # messages = [{
-    #     "role" : "user",
-    #     "content" : prompt
-    # }]
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
         if result is None:
             sys.exit(1)
-         
-    # print(f"\n Done Broski")
 
 main()
