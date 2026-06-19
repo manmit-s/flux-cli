@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from utils.paths import is_binary_file
+from utils.paths import is_binary_file, resolve
 from utils.text import count_tokens, truncate_text
 
 class ReadFileParams(BaseModel):
@@ -30,7 +30,7 @@ class ReadFileTool(Tools):
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = ReadFileParams(**invocation.params)
-        path = resolve_path(invocation.cwd, params.path)
+        path = resolve(invocation.cwd, params.path)
 
         if not path.exists():
             return ToolResult.error_result(f"File not found: {path}")
