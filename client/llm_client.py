@@ -58,9 +58,12 @@ class LLMClient:
 
         kwargs = {
             # "model" : "google/gemma-4-26b-a4b-it:free",
-            "model" : "google/gemma-4-26b-a4b-it:free",
+            # "model" : "google/gemini-2.5-flash",
+            "model" : "mistralai/mistral-small-2603",
             "messages" : messages,
             "stream" : stream,
+            #to cap max tokens for sometime to comply with openrouter
+            "max_tokens": 4000
         }
 
         if tools:
@@ -176,15 +179,15 @@ class LLMClient:
                                     ),
                                 )
                                     
-            for idx, tc in tool_calls.items():
-                yield StreamEvent(
-                    type = StreamEventType.TOOL_CALL_DELTA,
-                    tool_call_delta=ToolCall(
-                        call_id=tc['id'],
-                        name = tc['name'],
-                        arguments = parse_tool_call_arguments(tc['arguments'])
-                    )
+        for idx, tc in tool_calls.items():
+            yield StreamEvent(
+                type = StreamEventType.TOOL_CALL_COMPLETE,
+                tool_call_delta=ToolCall(
+                    call_id=tc['id'],
+                    name = tc['name'],
+                    arguments = parse_tool_call_arguments(tc['arguments'])
                 )
+            )
 
 
         yield StreamEvent(
@@ -209,7 +212,7 @@ class LLMClient:
                     call_id = tc.id,
                     name = tc.function.name,
                     arguments = parse_tool_call_arguments(tc.function.arguments)
-                    ##LEFT HERE###
+                    
                 ))
                 
 
