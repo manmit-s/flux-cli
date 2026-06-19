@@ -39,7 +39,7 @@ This project is a **learning initiative** designed to understand and implement c
 - ✅ Generator-based streaming with `yield`
 - ✅ Single entry point for different response modes
 
-### 4. **Agent Core & Event System** (May 24)
+### 4. **Agent Core & Event System**
 - ✅ `Agent` orchestrator with async context manager support
 - ✅ Event-driven architecture with `AgentEvent` and `AgentEventType`
 - ✅ Event lifecycle: `AGENT_START` → `TEXT_DELTA` × N → `TEXT_COMPLETE` → `AGENT_END`
@@ -47,35 +47,13 @@ This project is a **learning initiative** designed to understand and implement c
 - ✅ Agentic loop that processes LLM responses and yields events
 - ✅ Message context storage for multi-turn conversations (foundation)
 
-### 5. **CLI & Terminal UI** (May 24)
+### 5. **CLI & Terminal UI**
 - ✅ Click-based CLI with command-line argument parsing
 - ✅ Rich terminal output with custom theme styling
 - ✅ Real-time streaming text display with `stream_assistant_delta()`
 - ✅ Assistant response formatting with rule separators
 - ✅ Error handling and display with `style="error"`
 - ✅ Async context manager integration for clean resource management
-
-## 🚀 In Progress / Future Features
-
-### Phase 2: Advanced Agent Features *(Next)*
-- [ ] Multi-turn conversation context (remember previous messages)
-- [ ] Tool registry system (define available tools)
-- [ ] Tool selection logic (LLM decides which tool to use)
-- [ ] Function calling from LLM responses
-- [ ] Multi-step task orchestration
-
-### Phase 3: Code Manipulation
-- [ ] File reading and analysis
-- [ ] AST parsing for understanding code structure
-- [ ] Automated refactoring suggestions
-- [ ] Multi-file editing capabilities
-- [ ] Dependency analysis
-
-### Phase 4: Reasoning & Iteration
-- [ ] Multi-turn reasoning loops
-- [ ] Self-correction based on execution results
-- [ ] Plan generation and execution
-- [ ] Context management for complex tasks
 
 ## 📁 Project Structure
 
@@ -199,7 +177,7 @@ python main.py "Hello, how are you?"
 python main.py "Write a 250 character line about Python"
 ```
 
-## 📝 Recent Updates (May 24, 2026)
+## 📝 Recent Updates
 
 ### Agent Orchestration System
 - Built the `Agent` class that orchestrates conversations
