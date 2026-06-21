@@ -10,6 +10,9 @@ import click
 from config.config import Config
 from config.loader import load_config
 from ui.tui import TUI, get_console
+import dotenv
+
+dotenv.load_dotenv()
 
 console = get_console()
 class CLI:
