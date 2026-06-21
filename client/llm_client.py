@@ -24,7 +24,7 @@ class LLMClient:
             api_key = os.getenv("API_KEY")
             self._client = AsyncOpenAI(
                 api_key = api_key,
-                base_url = self.config.base_url, # "https://openrouter.ai/api/v1"
+                base_url = self.config.base_url,
             )
         return self._client
 
