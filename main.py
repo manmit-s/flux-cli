@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from typing import Any
 from agent.agent import Agent
@@ -6,19 +7,50 @@ from client.llm_client import LLMClient
 import asyncio
 import click
 
+from config.config import Config
+from config.loader import load_config
 from ui.tui import TUI, get_console
 
 console = get_console()
 class CLI:
-    def __init__(self):
+    def __init__(self, config: Config):
         self.agent: Agent | None = None
+        self.config = config
         self.tui = TUI()
 
     async def run_single(self, message: str):
-        async with Agent() as agent:
+        async with Agent(self.config) as agent:
             self.agent = agent
             return await self._process_message(message)
+    
+    async def run_interactive(self):
+        self.tui.print_welcome(
+            title='Flux-CLI',
+            lines=[
+                f"model: mistralai/mistral-small-2603",
+                f"cwd: {Path.cwd}",
+                "commands: /help  /config  /approval  /model  /exit",
+            ]
+        )
+        async with Agent(self.config) as agent:
+            self.agent = agent
 
+            while True:
+                try:
+                    user_input = console.input("\n[user]>[/user] ").strip()
+                    if not user_input:
+                        continue
+
+                    await self._process_message(user_input)
+                except KeyboardInterrupt:
+                    console.print("\n[dim]Use /exit to quit[/dim]")
+                except EOFError:
+                    break
+
+        console.print("\n[dim]Goodbye![/dim]")
+
+
+    
     def _get_tool_kind(self, tool_name: str) -> str | None:
         tool_kind = None
         tool = self.agent.tool_registry.get(tool_name)
@@ -90,13 +122,43 @@ async def run(messages: dict[str, Any]):
 
 @click.command()
 @click.argument("prompt", required = False)
+@click.option(
+    '==cwd',
+    '-c',
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    help = 'Current Working Directory'
+)
 def main(
-        prompt: str | None
+        prompt: str | None,
+        cwd: Path | None,
 ):   
-    cli = CLI() 
+    config = None
+    try: 
+        config = load_config(cwd=cwd)
+    except Exception as e:
+        console.print(f"[error]Configuration Error: {e}[/error]")
+        sys.exit(1)
+
+    if config is None:
+        console.print("[error]Failed to load configuration[/error]")
+        sys.exit(1)
+
+    errors = config.validate()
+
+    if errors:
+        for error in errors:
+            console.print(f"[error]{error}[/error]")
+
+        sys.exit(1)
+
+    cli = CLI(config)  
+    
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
         if result is None:
             sys.exit(1)
+    else:
+        asyncio.run(cli.run_interactive())
+             
 
 main()
