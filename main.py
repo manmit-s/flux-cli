@@ -126,10 +126,10 @@ async def run(messages: dict[str, Any]):
 @click.command()
 @click.argument("prompt", required = False)
 @click.option(
-    '==cwd',
+    '--cwd',
     '-c',
     type=click.Path(exists=True, file_okay=False, path_type=Path),
-    help = 'Current Working Directory'
+    help='Current Working Directory'
 )
 def main(
         prompt: str | None,
