@@ -14,7 +14,7 @@ CONFIG_FILE_NAME = 'config.toml'
 AGENT_MD_FILE = 'AGENT.md'
  
 def get_config_dir() -> Path:
-    return Path(user_config_dir("Flux-CLI"))
+    return Path(user_config_dir("flux-cli", appauthor=False))
 
 def get_system_config_path() -> Path:
     return get_config_dir() / CONFIG_FILE_NAME
@@ -31,7 +31,7 @@ def _parse_toml(path: Path):
             
 def _get_project_config(cwd: Path) -> Path | None:
     current = cwd.resolve()
-    agent_dir = current / '.ai-agent'
+    agent_dir = current / '.flux-cli'
 
     if agent_dir.is_dir():
         config_file = agent_dir / CONFIG_FILE_NAME
@@ -42,7 +42,7 @@ def _get_project_config(cwd: Path) -> Path | None:
 
 def _get_agent_md_files(cwd: Path) -> Path | None:
     current = cwd.resolve()
-    agent_dir = current / '.ai-agent'
+    agent_dir = current / '.flux-cli'
 
     if agent_dir.is_dir():
         agent_md_file = current / AGENT_MD_FILE
