@@ -59,9 +59,7 @@ class LLMClient:
         client = self.get_client()
 
         kwargs = {
-            # "model" : "google/gemma-4-26b-a4b-it:free",
-            # "model" : "google/gemini-2.5-flash",
-            "model" : "mistralai/mistral-small-2603",
+            "model" : self.config.model_name,
             "messages" : messages,
             "stream" : stream,
             #to cap max tokens for sometime to comply with openrouter
