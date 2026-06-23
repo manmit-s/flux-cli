@@ -14,7 +14,7 @@ class Config(BaseModel):
     cwd: Path = Field(default_factory=Path.cwd)
     
     max_turns: int = 100
-    max_tool_output_tokens: int = 50_000
+    # max_tool_output_tokens: int = 50_000  #not required i guess let's see
 
     developer_instructions: str | None = None
     user_instructions: str | None = None
