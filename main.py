@@ -19,7 +19,7 @@ class CLI:
     def __init__(self, config: Config):
         self.agent: Agent | None = None
         self.config = config
-        self.tui = TUI()
+        self.tui = TUI(config, console)
 
     async def run_single(self, message: str):
         async with Agent(self.config) as agent:
@@ -30,8 +30,8 @@ class CLI:
         self.tui.print_welcome(
             title='Flux-CLI',
             lines=[
-                f"model: mistralai/mistral-small-2603",
-                f"cwd: {Path.cwd}",
+                f"model: {self.config.model_name}",
+                f"cwd: {self.config.cwd}",
                 "commands: /help  /config  /approval  /model  /exit",
             ]
         )
@@ -43,24 +43,28 @@ class CLI:
                     user_input = console.input("\n[user]>[/user] ").strip()
                     if not user_input:
                         continue
-
+                    
+                    if user_input == "/exit":
+                        console.print("\n[dim]Goodbye![/dim]")
+                        break
+                    
                     await self._process_message(user_input)
+                    
                 except KeyboardInterrupt:
                     console.print("\n[dim]Use /exit to quit[/dim]")
                 except EOFError:
                     break
 
-        console.print("\n[dim]Goodbye![/dim]")
+
+        # console.print("\n[dim]Goodbye![/dim]")
 
 
     
     def _get_tool_kind(self, tool_name: str) -> str | None:
         tool_kind = None
-        tool = self.agent.tool_registry.get(tool_name)
-        if not tool:
-            tool_kind = None
-
-        tool_kind = tool.kind.value
+        tool = self.agent.session.tool_registry.get(tool_name)
+        if tool:
+            tool_kind = tool.kind.value
         return tool_kind
 
     async def _process_message(self, message: str) -> str | None:
