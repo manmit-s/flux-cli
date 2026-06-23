@@ -74,7 +74,7 @@ class ToolRegistry:
                 logger.exception(f"Tool {name} raised an unexpected error")
                 result = ToolResult.error_result(
                     f'Internal Error: {str(e)}',
-                    metadata = {'tool_name', name}
+                    metadata = {'tool_name': name}
                 )
             
             return result
