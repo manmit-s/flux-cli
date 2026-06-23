@@ -82,12 +82,13 @@ class ReadFileTool(Tools):
                 formatted_lines.append(f"{i:6} | {line}")
 
             output = "\n".join(formatted_lines)
-            token_count = count_tokens(output, "mistralai/mistral-small-2603")
+            token_count = count_tokens(output)
 
             truncated: bool = False
             if token_count > self.MAX_OUTPUT_TOKENS:
                 output = truncate_text(
                     output,
+                    "",
                     self.MAX_OUTPUT_TOKENS,
                     suffix=f"\n...[truncated {total_lines} total lines]"
                 )
