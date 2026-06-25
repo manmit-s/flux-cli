@@ -8,6 +8,8 @@ from pydantic.json_schema import model_json_schema
 from enum import Enum
 from typing import Any
 
+from config.config import Config
+
 class ToolKind(str, Enum):
     READ = "read"
     WRITE = "write"
@@ -61,6 +63,7 @@ class ToolResult:
     metadata: dict[str, Any] = field(default_factory = dict)
     truncated: bool = False
     diff: FileDiff  | None = None
+    exit_code: int | None = None
 
     @classmethod
     def error_result(
@@ -108,8 +111,8 @@ class Tools(abc.ABC):
     description: str = "Base tool"
     kind: ToolKind = ToolKind.READ
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, config: Config) -> None:
+        self.config = config
     
     @property
     def schema(self) -> dict[str, Any] | type['BaseModel']:
