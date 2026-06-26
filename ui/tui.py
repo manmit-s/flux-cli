@@ -59,7 +59,7 @@ class TUI:
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
         self.config = config
         self.cwd = self.config.cwd
-        self._max_block_tokens = 240
+        self._max_block_tokens = 2500
     
     def begin_assistant(self) -> None:
         self.console.print()
@@ -81,7 +81,9 @@ class TUI:
             'write_file' : ['path', 'create_directories', 'content'],
             'edit' : ['path', 'replace_all', 'old_string', 'new_string'],
             'shell' : ['command', 'timeout', 'cwd'],
-            'list_dir' : ['path', 'include_hidden']
+            'list_dir' : ['path', 'include_hidden'],
+            'grep' : ["path", 'case_insensitive', 'pattern'],
+            'glob' : ['path', 'pattern'],
 
         }
         
@@ -140,8 +142,13 @@ class TUI:
                 display_args[key] = str(display_path_rel_to_cwd(val, self.cwd))
 
 
+
+
+        empty_args: dict[str, Any] = {}
+        panel_args = display_args if isinstance(display_args, dict) and display_args else empty_args
+
         panel = Panel(
-            self._render_args_table(name, display_args if display_args else Text('(no args)', style="muted")),
+            self._render_args_table(name, panel_args),
             title = title,
             title_align='left',
             subtitle=Text('running', style="muted"),
@@ -301,7 +308,7 @@ class TUI:
             
             blocks.append(Syntax(diff_display, 'diff', theme='dracula', word_wrap=True))
 
-        elif name == 'shell':
+        elif name == 'shell' and success:
             command = args.get('command')
             if isinstance(command, str) and command.strip():
                 blocks.append(Text(f'$ {command.strip()}', style='muted'))
@@ -312,7 +319,7 @@ class TUI:
             output_display = truncate_text(output, self.config.model_name, self._max_block_tokens,)
             blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
 
-        elif name == 'list_dir':
+        elif name == 'list_dir' and success:
             entries = metadata.get('entries')
             path = metadata.get('path')
             summary = []
@@ -327,6 +334,41 @@ class TUI:
 
             output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
             blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
+
+        elif name == "grep" and success:
+            matches = metadata.get('matches')
+            files_searched = metadata.get('files_searched')
+            summary = []
+            
+            if isinstance(matches, int):
+                summary.append(f"{matches} matches")
+            if isinstance(files_searched, int):
+                summary.append(f"searched {files_searched} files")
+            
+            if summary:
+                blocks.append(Text(' ⦁ '.join(summary), style='muted'))
+
+            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+            blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
+        
+        elif name == "glob" and success:
+            matches = metadata.get('matches')
+            
+            if isinstance(matches, int):
+                blocks.append(Text(f"{matches} matches", style='muted'),)
+            
+            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+            blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
+            
+
+        if error and not success:
+            blocks.append(Text(error, style='error'))
+
+            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+            if output_display.strip():
+                blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
+            else:
+                blocks.append(Text('(no output)', style='muted'))
 
         else:
             if not success:
