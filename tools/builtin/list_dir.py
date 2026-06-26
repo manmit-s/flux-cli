@@ -20,7 +20,7 @@ class ListDirTool(Tools):
 
         dir_path = resolve_path(invocation.cwd, params.path)
 
-        if not dir_path.exists or not dir_path.is_dir:
+        if not dir_path.exists() or not dir_path.is_dir():
             return ToolResult.error_result(f"Directory does not exist: {dir_path}")
         
         try:
