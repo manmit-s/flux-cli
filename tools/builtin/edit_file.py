@@ -121,34 +121,34 @@ class EditTool(Tools):
         )
 
 
-        def _no_match_error(self, old_string: str, content: str, path: Path) -> ToolResult:
-            lines = content.splitlines()
+    def _no_match_error(self, old_string: str, content: str, path: Path) -> ToolResult:
+        lines = content.splitlines()
 
-            partial_matches = []
-            search_terms = old_string.split()[:5]
+        partial_matches = []
+        search_terms = old_string.split()[:5]
 
-            if search_terms:
-                first_term = search_terms[0]
-                for i, line in enumerate(lines, 1):
-                    if first_term in line:
-                        partial_matches.append((i, line.strip()[:80]))
-                        if len(partial_matches) >= 3:
-                            break
+        if search_terms:
+            first_term = search_terms[0]
+            for i, line in enumerate(lines, 1):
+                if first_term in line:
+                    partial_matches.append((i, line.strip()[:80]))
+                    if len(partial_matches) >= 3:
+                        break
 
-            error_msg = f"old_string not found in {path}."
+        error_msg = f"old_string not found in {path}."
 
-            if partial_matches:
-                error_msg += "\n\nPossible similar lines:"
-                for line_num, line_preview in partial_matches:
-                    error_msg += f"\n  Line {line_num}: {line_preview}"
-                error_msg += "\n\nMake sure old_string matches exactly (including whitespace and indentation)."
-            else:
-                error_msg += (
-                    " Make sure the text matches exactly, including:\n"
-                    "- All whitespace and indentation\n"
-                    "- Line breaks\n"
-                    "- Any invisible characters\n"
-                    "Try re-reading the file using read_file tool and then editing."
-                )
-            
-            return ToolResult.error_result(error_msg)
+        if partial_matches:
+            error_msg += "\n\nPossible similar lines:"
+            for line_num, line_preview in partial_matches:
+                error_msg += f"\n  Line {line_num}: {line_preview}"
+            error_msg += "\n\nMake sure old_string matches exactly (including whitespace and indentation)."
+        else:
+            error_msg += (
+                " Make sure the text matches exactly, including:\n"
+                "- All whitespace and indentation\n"
+                "- Line breaks\n"
+                "- Any invisible characters\n"
+                "Try re-reading the file using read_file tool and then editing."
+            )
+        
+        return ToolResult.error_result(error_msg)
