@@ -107,12 +107,12 @@ class TUI:
         table.add_column(style="code", overflow="fold")
 
         for key, value in self._ordered_args(tool_name, args):
-            if key in {'content', 'old_string', 'new_string'}:
+            if key in {'content', 'old_string', 'new_string'} and isinstance(value, str):
                 line_count = len(value.splitlines()) or 0
                 byte_count = len(value.encode('utf-8', errors='replace'))
                 value = f"<{line_count} lines ⚬ {byte_count} bytes>"
 
-            if isinstance(value, bool):
+            if not isinstance(value, str):
                 value = str(value)
 
             table.add_row(key, value)
