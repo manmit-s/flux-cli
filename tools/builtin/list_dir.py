@@ -45,7 +45,7 @@ class ListDirTool(Tools):
         lines = []
 
         for item in items:
-            if item.is_dir:
+            if item.is_dir():
                 lines.append(f"{item.name}/")
             else:
                 lines.append(item.name)
