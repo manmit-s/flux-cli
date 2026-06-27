@@ -54,14 +54,13 @@ class GrepTool(Tools):
             lines = content.splitlines()
             file_matches = False
             for i, line in enumerate(lines, start=1):
-                matches += 1
                 if pattern.search(line):
+                    matches += 1
                     if not file_matches:
-                        # try:
-                        #     rel_path = file_path.relative_to(invocation.cwd)
-                        # except Exception:
-                        #     rel_path = file_path
-                        rel_path = file_path.relative_to(invocation.cwd)
+                        try:
+                            rel_path = file_path.relative_to(invocation.cwd)
+                        except Exception:
+                            rel_path = file_path
                         output_lines.append(f"━━━━━━ {rel_path} ━━━━━━")
                         file_matches = True
 
@@ -80,7 +79,7 @@ class GrepTool(Tools):
                 },
                 )
         
-        if len(matches) > 1000:
+        if matches > 1000:
             output_lines.append(f"....(limited to 1000 results)")
         return ToolResult.success_result(
             '\n'.join(output_lines),
