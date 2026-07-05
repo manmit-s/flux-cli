@@ -1,5 +1,11 @@
+import uuid
+
 from pydantic import BaseModel, Field
+from config.config import Config
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
+from rich.console import Console
+from rich.table import Table
+from rich.box import ROUNDED
 
 
 class ToDoParams(BaseModel):
@@ -15,42 +21,50 @@ class ToDoTool(Tools):
     kind = ToolKind.MEMORY
     schema = ToDoParams
 
+    def __init__(self, config: Config):
+        super().__init__(config)
+        self._todos: dict[str, str] = {}
+     
+    def _display_todos(self) -> str:
+        console = Console()
+        table = Table(title="Todo List", box=ROUNDED, show_header=True, header_style="bold magenta")
+        table.add_column("ID", style="dim", width=12)
+        table.add_column("Content", style="green")
+
+        for todo_id, content in self._todos.items():
+            table.add_row(todo_id, content)
+
+        console.print(table)
+        return str(table)
+
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = ToDoParams(**invocation.params)
-        ###BOOKMARK###
-        try:
-            results = DDGS().text(
-                params.query,
-                region='us-en',
-                safesearch='off',
-                timelimit='y',
-                page=1,
-                backend='auto'
-            )
-        except Exception as e:
-            return ToolResult.error_result(f"Search failed: {e}")
-        
-        if not results:
-            return ToolResult.success_result(
-                f"No results found for: {params.query}", 
-                metadata={
-                'results' : 0,
-            })
-        
 
-        output_lines = [f"Search results for: {params.query}"]
+        if params.action.lower() == 'add':
+            if not params.content:
+                return ToolResult.error_result("`content` required for 'add' action")
 
-        for i, result in enumerate(results, start=1):
-            output_lines.append(f"{i}. Title: {result['title']}")
-            output_lines.append(f"   URL: {result['href']}")
-            if result.get('body'):
-                output_lines.append(f"   Snippet: {result['body']}")
+            todo_id = str(uuid.uuid4())[:8]
+            self._todos[todo_id] = params.content
 
-            output_lines.append("")
+            return ToolResult.success_result(f"Added todo [{todo_id}] : {params.content}")
+        elif params.action.lower() == 'complete':
+            if not params.id:
+                return ToolResult.error_result("`id` required for 'complete' action")
+            if params.id not in self._todos:
+                return ToolResult.error_result(f"Todo not found: {params.id}")
+            
+            content = self._todos.pop(params.id)
+            return ToolResult.success_result(f"Completed todo [{params.id}] : {content}")
         
-        return ToolResult.success_result(
-            '\n'.join(output_lines), 
-            metadata={
-                'results': len(results),
-            }
-        )
+        elif params.action.lower() == 'list':
+            if not self._todos:
+                return ToolResult.success_result("No todos left!")
+            
+            return ToolResult.success_result(self._display_todos())
+        elif params.action == 'clear':
+            count = len(self._todos)
+            self._todos.clear()
+            return ToolResult.success_result(f"Cleared {count} todos")
+        else:
+            return ToolResult.error_result(f"Unknown Action: {params.action}")
