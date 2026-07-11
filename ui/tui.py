@@ -395,6 +395,10 @@ class TUI:
             
             output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
             blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
+
+        elif name.startswith('subagent_') and success:
+            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+            blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
             
         
         elif name == "todos" and success:
@@ -419,28 +423,15 @@ class TUI:
             output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
             blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
             
-
-        if error and not success:
-            blocks.append(Text(error, style='error'))
-
-            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
-            if output_display.strip():
-                blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
-            else:
-                blocks.append(Text('(no output)', style='muted'))
-
         else:
-            if not success:
-                display_error = error or output or "Unknown error"
-                blocks.append(Text(display_error, style="error"))
-            elif output:
-                output_display = truncate_text(output, "", self._max_block_tokens, )
-                blocks.append(Syntax(
-                    output_display,
-                    'text',
-                    theme='dracula',
-                    word_wrap=False,
-                ))
+            if error and not success:
+                blocks.append(Text(error, style='error'))
+
+                output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+                if output_display.strip():
+                    blocks.append(Syntax(output_display, 'text', theme='dracula', word_wrap=True))
+                else:
+                    blocks.append(Text('(no output)', style='muted'))
 
         if truncated:
             blocks.append(Text('note: tool output was truncated', style='warning'))
