@@ -16,7 +16,7 @@ class Agent:
         self.current_message = message
         yield AgentEvent.agent_start(message)
 
-        #Conetxt Manager
+        #Context Manager
         self.session.context_manager.add_user_message(message)
 
         final_response: str | None = None
