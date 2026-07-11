@@ -146,7 +146,7 @@ class Tools(abc.ABC):
     def is_mutating(self, params: dict[str, Any]) -> bool:
         return self.kind in {ToolKind.WRITE, ToolKind.SHELL, ToolKind.SHELL, ToolKind.MEMORY}
     
-    async def get_comfirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
+    async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
         if not self.is_mutating(invocation.params):
             return None
 
