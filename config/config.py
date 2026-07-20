@@ -1,8 +1,9 @@
+from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 class ModelConfig(BaseModel):
     name: str = "mistralai/mistral-small-2603"
@@ -13,14 +14,40 @@ class ShellEnvironmentPolicy(BaseModel):
     ignore_default_excludes: bool = False
     exclude_patterns: list[str] = Field(default_factory= lambda: ["*KEY", "*TOKEN", "*SECRET"])
     set_vars: dict[str, str] = Field(default_factory=dict)
+
+class MCPServerConfig(BaseModel):
+    enabled: bool = True
+    startup_timeout_sec: float = 10
+    #stdio transport
+    command: str | None = None
+    args: list[str] = Field(default_factory=list)
+    env: dict[str, str] = Field(default_factory=dict)
+    cwd: Path | None
+
+    # http/sse transport
+    url: str | None = None
+
+    @model_validator(mode='after')
+    def validate_transport(self) -> MCPServerConfig:
+        has_command = self.command is not None
+        has_url = self.url is not None
+
+        if not has_command and not None:
+            raise ValueError("MCP Server must either 'command' (stdio) or 'url' (http/sse)")
+        
+        if has_command and has_url:
+            raise ValueError("MCP Server cannot have both 'command' (stdio) and 'url' (http/sse)")
+
+
 class Config(BaseModel):
     model: ModelConfig = Field(default_factory = ModelConfig)
     cwd: Path = Field(default_factory=Path.cwd)
     shell_environment: ShellEnvironmentPolicy = Field(
         default_factory=ShellEnvironmentPolicy
     )
-    
+        
     max_turns: int = 100
+    mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
     # max_tool_output_tokens: int = 50_000  #not required i guess let's see
     allowed_tools: list[str] | None = Field(None, description="If set, only these tools will be available to the agent",)
 
