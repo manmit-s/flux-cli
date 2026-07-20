@@ -1,6 +1,5 @@
 # Flux-CLI
 
-> 🚧 **Work In Progress** — Actively being developed as a learning project. APIs and architecture may change.
 
 An AI agent project built from scratch to understand how Claude Code CLI works, including multi-tool selection, reasoning, and iterative file editing capabilities.
 
