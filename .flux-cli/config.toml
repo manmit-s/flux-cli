@@ -1,3 +1,7 @@
 [model]
 temperature = 0
-name = "nvidia/nemotron-3-nano-30b-a3b" 
+name = "nvidia/nemotron-3-nano-30b-a3b"
+
+# [mcp_servers.filesystem]
+# command = "npx"
+# args = ["-y", "@modelcontextprotocol/server-filesystem", "Users/username/.flux-cli/Desktop/flux-cli", "/tmp"]
