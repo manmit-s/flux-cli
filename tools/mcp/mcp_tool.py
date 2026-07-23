@@ -1,3 +1,5 @@
+from typing import Any
+
 from config.config import Config
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
 from tools.mcp.client import MCPClient, MCPToolInfo
@@ -10,8 +12,11 @@ class MCPTool(Tools):
         self._client = client
         self.name = name
         self.description = self._tool_info.description
+
+    @property
+    def schema(self) -> dict[str, Any]:
         input_schema = self._tool_info.input_schema or {}
-        self.schema = {
+        return {
             'type' : 'object',
             'properties' :  input_schema.get('properties', {}),
             'required' : input_schema.get('required', []),
@@ -20,50 +25,17 @@ class MCPTool(Tools):
     def is_mutating(self, params) -> bool:
         return True
 
-    description = 'List content of directory'
     kind = ToolKind.MCP
-    schema = ListDirParams
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
-        params = ListDirParams(**invocation.params)
-
-        dir_path = resolve_path(invocation.cwd, params.path)
-
-        if not dir_path.exists() or not dir_path.is_dir():
-            return ToolResult.error_result(f"Directory does not exist: {dir_path}")
-        
         try:
-            items = sorted(dir_path.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
+            result = await self._client.call_tool(self._tool_info.name, invocation.params)
+            output = result.get('output', '')
+            is_error = result.get('is_error', False)
+
+            if is_error:
+                return  ToolResult.error_result(output)
+            return ToolResult.success_result(output)
         except Exception as e:
-            return ToolResult.error_result(
-                f"Error listing directory: {e}"
-            )
-
-        if not params.include_hidden:
-            items = [item for item in items if not item.name.startswith('.')]
-        
-        if not items:
-            return ToolResult.success_result(
-                'Directory is empty', 
-                metadata = {
-                    'path' : str(dir_path),
-                    'entries' : 0
-                },
-                )
-        
-        lines = []
-
-        for item in items:
-            if item.is_dir():
-                lines.append(f"{item.name}/")
-            else:
-                lines.append(item.name)
-        
-        return ToolResult.success_result(
-            '\n'.join(lines),
-            metadata = {
-                'path' : str(dir_path),
-                'entries' : len(items)
-            },
-            )
+            return ToolResult.error_result(f"MCP Tool failed: {e}")
         
