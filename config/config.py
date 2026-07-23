@@ -22,7 +22,7 @@ class MCPServerConfig(BaseModel):
     command: str | None = None
     args: list[str] = Field(default_factory=list)
     env: dict[str, str] = Field(default_factory=dict)
-    cwd: Path | None
+    cwd: Path | None = None
 
     # http/sse transport
     url: str | None = None
@@ -32,12 +32,13 @@ class MCPServerConfig(BaseModel):
         has_command = self.command is not None
         has_url = self.url is not None
 
-        if not has_command and not None:
+        if not has_command and not has_url:
             raise ValueError("MCP Server must either 'command' (stdio) or 'url' (http/sse)")
         
         if has_command and has_url:
             raise ValueError("MCP Server cannot have both 'command' (stdio) and 'url' (http/sse)")
 
+        return self
 
 class Config(BaseModel):
     model: ModelConfig = Field(default_factory = ModelConfig)
