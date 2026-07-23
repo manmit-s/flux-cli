@@ -24,7 +24,9 @@ class ToolRegistry:
         self._tools[tool.name] = tool
         logger.debug(f"Registered tool: {tool.name}")
     
-    def register_mcp_tool(self, name: str, tool: Tools) -> None:
+    def register_mcp_tool(self, tool: Tools) -> None:
+        if tool.name in self._mcp_tools:
+            logger.warning(f"Overwriting existing MCP tool: {tool.name}")
         self._mcp_tools[tool.name] = tool
         logger.debug(f"Registered MCP tool: {tool.name}")
 
