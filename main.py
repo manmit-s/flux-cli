@@ -11,6 +11,16 @@ from config.config import Config
 from config.loader import load_config
 from ui.tui import TUI, get_console
 import dotenv
+import warnings
+
+def _suppress_unraisable_shutdown_warnings(unraisable: Any) -> None:
+    if unraisable.exc_type in (RuntimeError, ValueError) and "closed" in str(unraisable.exc_value):
+        return
+    sys.__unraisablehook__(unraisable)
+
+sys.unraisablehook = _suppress_unraisable_shutdown_warnings
+warnings.filterwarnings("ignore", category=ResourceWarning)
+warnings.filterwarnings("ignore", message=".*unclosed.*")
 
 dotenv.load_dotenv()
 
