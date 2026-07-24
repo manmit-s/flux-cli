@@ -1,6 +1,6 @@
 [model]
 temperature = 0
-name = "meta/llama-3.1-70b-instruct"
+name = "nvidia/nemotron-3-super-120b-a12b"
 
 [mcp_servers.filesystem]
 command = "npx"
