@@ -45,7 +45,7 @@ class CLI:
                 "commands: /help  /config  /approval  /model  /exit",
             ]
         )
-        async with Agent(self.config) as agent:
+        async with Agent(self.config, confirmation_callback=self.tui.handle_confirmation) as agent:
             self.agent = agent
 
             while True:
@@ -64,10 +64,6 @@ class CLI:
                     console.print("\n[dim]Use /exit to quit[/dim]")
                 except EOFError:
                     break
-
-
-        # console.print("\n[dim]Goodbye![/dim]")
-
 
     
     def _get_tool_kind(self, tool_name: str) -> str | None:
