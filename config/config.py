@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum
 import os
 from pathlib import Path
 from typing import Any
@@ -40,12 +41,21 @@ class MCPServerConfig(BaseModel):
 
         return self
 
+class ApprovalPolicy(str, Enum):
+    ON_REQUEST = 'on-request'
+    ON_FAILURE = 'on-failure'
+    AUTO = 'auto'
+    AUTO_EDIT = 'auto-edit'
+    NEVER = 'never'
+    YOLO = 'yolo'
+
 class Config(BaseModel):
     model: ModelConfig = Field(default_factory = ModelConfig)
     cwd: Path = Field(default_factory=Path.cwd)
     shell_environment: ShellEnvironmentPolicy = Field(
         default_factory=ShellEnvironmentPolicy
     )
+    approval: ApprovalPolicy = ApprovalPolicy.ON_REQUEST
         
     max_turns: int = 100
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
