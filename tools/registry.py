@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 from config.config import Config
-# from hooks.hook_system import HookSystem
+from hooks.hook_system import HookSystem
 from safety.approval import ApprovalContext, ApprovalDecision, ApprovalManager
 from tools.base import Tools, ToolInvocation, ToolResult
 import logging
@@ -70,7 +70,7 @@ class ToolRegistry:
         name: str,
         params: dict[str, Any],
         cwd: Path,
-        # hook_system: HookSystem,
+        hook_system: HookSystem,
         approval_manager: ApprovalManager | None = None,
     ) -> ToolResult:
         tool = self.get(name)
@@ -151,6 +151,6 @@ def create_default_registry(config: Config) -> ToolRegistry:
         registry.register(tool_class(config))
 
     for subagent_def in get_default_subagent_definitions():
-        registry.register(SubagentTool(config, subagent_def))
+        registry.register(SubAgentTool(config, subagent_def))
 
     return registry
