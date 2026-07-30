@@ -24,12 +24,15 @@ class WebSearchTool(Tools):
                 safesearch='off',
                 timelimit='y',
                 page=1,
-                backend='auto'
+                backend='auto',
+                max_results=params.max_results,
             )
         except Exception as e:
             return ToolResult.error_result(f"Search failed: {e}")
         
-        if not results:
+        limited_results = list(results)[:params.max_results]
+
+        if not limited_results:
             return ToolResult.success_result(
                 f"No results found for: {params.query}", 
                 metadata={
@@ -39,9 +42,9 @@ class WebSearchTool(Tools):
 
         output_lines = [f"Search results for: {params.query}"]
 
-        for i, result in enumerate(results, start=1):
-            output_lines.append(f"{i}. Title: {result['title']}")
-            output_lines.append(f"   URL: {result['href']}")
+        for i, result in enumerate(limited_results, start=1):
+            output_lines.append(f"{i}. Title: {result.get('title', '(untitled)')}")
+            output_lines.append(f"   URL: {result.get('href', '')}")
             if result.get('body'):
                 output_lines.append(f"   Snippet: {result['body']}")
 
@@ -50,6 +53,6 @@ class WebSearchTool(Tools):
         return ToolResult.success_result(
             '\n'.join(output_lines), 
             metadata={
-                'results': len(results),
+                'results': len(limited_results),
             }
         )
