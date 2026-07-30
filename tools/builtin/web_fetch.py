@@ -1,4 +1,5 @@
-from urllib.parse import urlparse
+import ipaddress
+from urllib.parse import urljoin, urlparse
 import httpx
 from pydantic import BaseModel, Field
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
@@ -28,12 +29,53 @@ class WebFetchTool(Tools):
     schema = WebFetchParams
 
     def _proxy_url(self, url: str) -> str:
-        return f'https://r.jina.ai/http://{url}'
+        parsed = urlparse(url)
+        target = parsed.netloc + parsed.path
+        if parsed.query:
+            target += f"?{parsed.query}"
+        return f'https://r.jina.ai/http://{target}'
+
+    def _is_blocked_host(self, host: str | None) -> bool:
+        if not host:
+            return True
+
+        normalized = host.strip().lower().rstrip(".")
+        if normalized in {"localhost"} or normalized.endswith(".localhost"):
+            return True
+
+        try:
+            ip = ipaddress.ip_address(normalized)
+        except ValueError:
+            return False
+
+        return (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_reserved
+            or ip.is_unspecified
+        )
 
     async def _fetch(self, client: httpx.AsyncClient, url: str) -> tuple[str, int]:
-        response = await client.get(url)
-        response.raise_for_status()
-        return response.text, response.status_code
+        current_url = url
+        for _ in range(5):
+            parsed = urlparse(current_url)
+            if self._is_blocked_host(parsed.hostname):
+                raise ValueError("Refusing to fetch localhost, private, or reserved network address")
+
+            response = await client.get(current_url)
+            if response.is_redirect:
+                location = response.headers.get("location")
+                if not location:
+                    break
+                current_url = urljoin(current_url, location)
+                continue
+
+            response.raise_for_status()
+            return response.text, response.status_code
+
+        raise ValueError("Too many redirects")
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = WebFetchParams(**invocation.params)
@@ -41,11 +83,13 @@ class WebFetchTool(Tools):
         parsed = urlparse(params.url)
         if not parsed.scheme or parsed.scheme not in ('http', 'https'):
             return ToolResult.error_result(f"Url must be http:// or https://")
+        if self._is_blocked_host(parsed.hostname):
+            return ToolResult.error_result("Refusing to fetch localhost, private, or reserved network address")
 
         try:
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(params.timeout),
-                follow_redirects=True,
+                follow_redirects=False,
                 headers=DEFAULT_HEADERS,
 
             ) as client:
@@ -65,6 +109,8 @@ class WebFetchTool(Tools):
             return ToolResult.error_result(
                 f"HTTP {e.response.status_code}: {e.response.reason_phrase}"
             )
+        except ValueError as e:
+            return ToolResult.error_result(str(e))
         except Exception as e:
             return ToolResult.error_result(f"Fetch failed: {e}")
 
