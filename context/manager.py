@@ -38,7 +38,7 @@ class ContextManager:
         self._model_name = self.config.model_name
         self._messages: list[MessageItem] = []
         self._latest_usage = TokenUsage()
-        self.total_usage = TokenUsage()
+        self._total_usage = TokenUsage()
 
     @property
     def message_count(self) -> int:
@@ -46,7 +46,11 @@ class ContextManager:
 
     @property
     def total_usage(self) -> TokenUsage:
-        return self.total_usage
+        return self._total_usage
+
+    @total_usage.setter
+    def total_usage(self, usage: TokenUsage) -> None:
+        self._total_usage = usage
 
     def add_user_message(self, content: str) -> None:
         item = MessageItem(
@@ -97,7 +101,11 @@ class ContextManager:
 
     def needs_compression(self) -> bool:
         context_limit = self.config.model.context_window
-        current_tokens = self._latest_usage.total_tokens
+        current_tokens = count_tokens(self._system_prompt, self._model_name)
+        current_tokens += sum(
+            msg.token_count or count_tokens(msg.content, self._model_name)
+            for msg in self._messages
+        )
 
         return current_tokens > (context_limit * 0.8)   
 
@@ -105,7 +113,7 @@ class ContextManager:
         self._latest_usage = usage
 
     def add_usage(self, usage: TokenUsage):
-        self.total_usage += usage
+        self._total_usage = self._total_usage + usage
 
     def replace_with_summary(self, summary: str) -> None:
         self._messages = []
@@ -156,7 +164,7 @@ class ContextManager:
         )
         self._messages.append(continue_item)
 
-    def prune_tool_output(self) -> int:
+    def prune_tool_outputs(self) -> int:
         user_message_count = sum(1 for msg in self._messages if msg.role == 'user')
         if user_message_count < 2:
             return 0
@@ -188,6 +196,9 @@ class ContextManager:
 
 
         return pruned_count
+
+    def prune_tool_output(self) -> int:
+        return self.prune_tool_outputs()
 
     def clear(self) -> None:
         self._messages = []
