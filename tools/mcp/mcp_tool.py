@@ -1,4 +1,5 @@
 from typing import Any
+import asyncio
 
 from config.config import Config
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
@@ -29,7 +30,10 @@ class MCPTool(Tools):
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         try:
-            result = await self._client.call_tool(self._tool_info.name, invocation.params)
+            result = await asyncio.wait_for(
+                self._client.call_tool(self._tool_info.name, invocation.params),
+                timeout=self._client.config.tool_timeout_sec,
+            )
             output = result.get('output', '')
             is_error = result.get('is_error', False)
 

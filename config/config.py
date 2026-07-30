@@ -23,6 +23,7 @@ class ShellEnvironmentPolicy(BaseModel):
 class MCPServerConfig(BaseModel):
     enabled: bool = True
     startup_timeout_sec: float = 10
+    tool_timeout_sec: float = 120
 
     # stdio transport
     command: str | None = None
