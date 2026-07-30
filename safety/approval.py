@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+import inspect
 from pathlib import Path
 import re
 from typing import Any, Awaitable, Callable
@@ -73,13 +74,13 @@ def is_dangerous_command(command: str) -> bool:
     for pattern in DANGEROUS_PATTERNS:
         if re.search(pattern, command, re.IGNORECASE):
             return True
-        return False
+    return False
 
 def is_safe_command(command: str) -> bool:
     for pattern in SAFE_PATTERNS:
         if re.search(pattern, command, re.IGNORECASE):
             return True
-        return False
+    return False
 
 class ApprovalManager:
     def __init__(self, approval_policy: ApprovalPolicy, cwd: Path, confirmation_callback: Callable[[ToolConfirmation], bool] | None = None) -> None:
@@ -136,7 +137,9 @@ class ApprovalManager:
 
     async def request_confirmation(self, confirmation: ToolConfirmation) -> bool:
         if self.confirmation_callback:
-            result = await self.confirmation_callback(confirmation)
-            return result
+            result = self.confirmation_callback(confirmation)
+            if inspect.isawaitable(result):
+                result = await result
+            return bool(result)
 
         return True
