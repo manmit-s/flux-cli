@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
-from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from utils.paths import resolve_path
+from tools.base import ToolConfirmation, ToolInvocation, ToolKind, ToolResult, Tools
+from utils.paths import is_within_directory, resolve_path
 
 # FUTURE IMPLEMENTATION can be recursive listing directories......
 class ListDirParams(BaseModel):
@@ -15,10 +15,28 @@ class ListDirTool(Tools):
     kind = ToolKind.READ
     schema = ListDirParams
 
+    async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
+        params = ListDirParams(**invocation.params)
+        dir_path = resolve_path(invocation.cwd, params.path)
+
+        if is_within_directory(dir_path, invocation.cwd):
+            return None
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.params,
+            description=f"List directory outside working directory: {dir_path}",
+            affected_paths=[dir_path],
+            is_dangerous=True,
+        )
+
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = ListDirParams(**invocation.params)
 
         dir_path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(dir_path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {dir_path}")
 
         if not dir_path.exists() or not dir_path.is_dir():
             return ToolResult.error_result(f"Directory does not exist: {dir_path}")

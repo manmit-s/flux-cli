@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from tools.base import FileDiff, ToolConfirmation, ToolInvocation, ToolKind, ToolResult, Tools
-from utils.paths import ensure_parent_directory, resolve_path
+from utils.paths import ensure_parent_directory, is_within_directory, resolve_path
 
 
 class WriteFileParams(BaseModel):
@@ -29,6 +29,14 @@ class WriteFileTool(Tools):
     async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
         params = WriteFileParams(**invocation.params)
         path = resolve_path(invocation.cwd, params.path)
+        if not is_within_directory(path, invocation.cwd):
+            return ToolConfirmation(
+                tool_name=self.name,
+                params=invocation.params,
+                description=f"Refuse write outside working directory: {path}",
+                affected_paths=[path],
+                is_dangerous=True,
+            )
         is_new_file = not path.exists()
         old_content = ""
         if not is_new_file:
@@ -57,6 +65,9 @@ class WriteFileTool(Tools):
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = WriteFileParams(**invocation.params)
         path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {path}")
 
         is_new_file = not path.exists()
         old_content = ""

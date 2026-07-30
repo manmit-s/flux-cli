@@ -3,8 +3,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from utils.paths import is_binary_file, resolve_path
+from tools.base import ToolConfirmation, ToolInvocation, ToolKind, ToolResult, Tools
+from utils.paths import is_binary_file, is_within_directory, resolve_path
 
 class GlobParams(BaseModel):
     pattern: str = Field(
@@ -18,10 +18,28 @@ class GlobTool(Tools):
     kind = ToolKind.READ
     schema = GlobParams
 
+    async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
+        params = GlobParams(**invocation.params)
+        search_path = resolve_path(invocation.cwd, params.path)
+
+        if is_within_directory(search_path, invocation.cwd):
+            return None
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.params,
+            description=f"Search files outside working directory: {search_path}",
+            affected_paths=[search_path],
+            is_dangerous=True,
+        )
+
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = GlobParams(**invocation.params)
 
         search_path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(search_path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {search_path}")
 
         if not search_path.exists() or not search_path.is_dir():
             return ToolResult.error_result(f"Directory does not exist: {search_path}")

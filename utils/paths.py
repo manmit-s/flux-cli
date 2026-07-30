@@ -3,11 +3,19 @@ from pathlib import Path
 
 def resolve_path(base: str | Path, path: str | Path):
     path = Path(path)
+    base_path = Path(base).resolve()
 
     if path.is_absolute():
         return path.resolve()
 
-    return Path(base).resolve() / path  
+    return (base_path / path).resolve()
+
+def is_within_directory(path: str | Path, directory: str | Path) -> bool:
+    try:
+        Path(path).resolve().relative_to(Path(directory).resolve())
+        return True
+    except ValueError:
+        return False
 
 def display_path_rel_to_cwd(path: str, cwd: Path) -> str:
     try:

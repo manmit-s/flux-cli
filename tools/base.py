@@ -54,6 +54,7 @@ class ToolInvocation:
     #cwd - current working directory
     params: dict[str, Any]
     cwd: Path
+    approved: bool = False
 
 @dataclass
 class ToolResult:

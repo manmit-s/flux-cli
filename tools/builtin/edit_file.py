@@ -9,7 +9,7 @@ from tools.base import (
 )
 from pydantic import BaseModel, Field
 
-from utils.paths import ensure_parent_directory, resolve_path
+from utils.paths import ensure_parent_directory, is_within_directory, resolve_path
 
 
 class EditParams(BaseModel):
@@ -47,6 +47,15 @@ class EditTool(Tools):
     ) -> ToolConfirmation | None:
         params = EditParams(**invocation.params)
         path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(path, invocation.cwd):
+            return ToolConfirmation(
+                tool_name=self.name,
+                params=invocation.params,
+                description=f"Refuse edit outside working directory: {path}",
+                affected_paths=[path],
+                is_dangerous=True,
+            )
 
         is_new_file = not path.exists()
 
@@ -90,6 +99,9 @@ class EditTool(Tools):
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = EditParams(**invocation.params)
         path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {path}")
 
         if not path.exists():
             if params.old_string:

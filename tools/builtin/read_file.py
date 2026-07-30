@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
-from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from utils.paths import is_binary_file, resolve_path
+from tools.base import ToolConfirmation, ToolInvocation, ToolKind, ToolResult, Tools
+from utils.paths import is_binary_file, is_within_directory, resolve_path
 from utils.text import count_tokens, truncate_text
 
 class ReadFileParams(BaseModel):
@@ -28,9 +28,27 @@ class ReadFileTool(Tools):
     MAX_FILE_SIZE = 1024*1024*10 
     MAX_OUTPUT_TOKENS = 2500
 
+    async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
+        params = ReadFileParams(**invocation.params)
+        path = resolve_path(invocation.cwd, params.path)
+
+        if is_within_directory(path, invocation.cwd):
+            return None
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.params,
+            description=f"Read file outside working directory: {path}",
+            affected_paths=[path],
+            is_dangerous=True,
+        )
+
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = ReadFileParams(**invocation.params)
         path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {path}")
 
         if not path.exists():
             return ToolResult.error_result(f"File not found: {path}")

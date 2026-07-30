@@ -4,8 +4,8 @@ import re
 
 from pydantic import BaseModel, Field
 
-from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from utils.paths import is_binary_file, resolve_path
+from tools.base import ToolConfirmation, ToolInvocation, ToolKind, ToolResult, Tools
+from utils.paths import is_binary_file, is_within_directory, resolve_path
 
 class GrepParams(BaseModel):
     pattern: str = Field(
@@ -21,10 +21,28 @@ class GrepTool(Tools):
     kind = ToolKind.READ
     schema = GrepParams
 
+    async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
+        params = GrepParams(**invocation.params)
+        search_path = resolve_path(invocation.cwd, params.path)
+
+        if is_within_directory(search_path, invocation.cwd):
+            return None
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.params,
+            description=f"Search file contents outside working directory: {search_path}",
+            affected_paths=[search_path],
+            is_dangerous=True,
+        )
+
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = GrepParams(**invocation.params)
 
         search_path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(search_path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {search_path}")
 
         if not search_path.exists():
             return ToolResult.error_result(f"Path does not exist: {search_path}")
@@ -44,8 +62,12 @@ class GrepTool(Tools):
 
         output_lines = []
         matches = 0
+        displayed_matches = 0
+        max_displayed_matches = 1000
         ## Number of matches displayed on cli is incorrect FIX THIS!!
         for file_path in files:
+            if displayed_matches >= max_displayed_matches:
+                break
             try:
                 content = file_path.read_text(encoding='utf-8')
             except Exception:
@@ -56,6 +78,8 @@ class GrepTool(Tools):
             for i, line in enumerate(lines, start=1):
                 if pattern.search(line):
                     matches += 1
+                    if displayed_matches >= max_displayed_matches:
+                        continue
                     if not file_matches:
                         try:
                             rel_path = file_path.relative_to(invocation.cwd)
@@ -65,6 +89,7 @@ class GrepTool(Tools):
                         file_matches = True
 
                     output_lines.append(f"{i}:{line}")
+                    displayed_matches += 1
 
             if file_matches:
                 output_lines.append("")
@@ -79,7 +104,7 @@ class GrepTool(Tools):
                 },
                 )
         
-        if matches > 1000:
+        if displayed_matches >= max_displayed_matches:
             output_lines.append(f"....(limited to 1000 results)")
         return ToolResult.success_result(
             '\n'.join(output_lines),

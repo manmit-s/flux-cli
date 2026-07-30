@@ -107,7 +107,9 @@ class ToolRegistry:
                 context = ApprovalContext(
                     tool_name=name,
                     params=params,
-                    is_mutating=tool.is_mutating(params),
+                    is_mutating=tool.is_mutating(params)
+                    or confirmation.is_dangerous
+                    or bool(confirmation.affected_paths),
                     affected_paths=confirmation.affected_paths,
                     command=confirmation.command,
                     is_dangerous=confirmation.is_dangerous,
@@ -121,12 +123,13 @@ class ToolRegistry:
                     await hook_system.trigger_after_tool(name, params, result)
                     return result
                 elif decision == ApprovalDecision.NEEDS_CONFIRMATION:
-                    approved = approval_manager.request_confirmation(confirmation)
+                    approved = await approval_manager.request_confirmation(confirmation)
 
                     if not approved:
                         result = ToolResult.error_result("User rejected the operation")
                         await hook_system.trigger_after_tool(name, params, result)
                         return result
+                    invocation.approved = True
 
         try:
             result = await tool.execute(invocation)
@@ -135,8 +138,7 @@ class ToolRegistry:
             result = ToolResult.error_result(
                 f"Internal error: {str(e)}",
                 metadata={
-                    "tool_name",
-                    name,
+                    "tool_name": name,
                 },
             )
 
