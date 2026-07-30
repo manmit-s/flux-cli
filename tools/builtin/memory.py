@@ -1,8 +1,6 @@
 import json
-import uuid
 
 from pydantic import BaseModel, Field
-from config.config import Config
 from config.loader import get_data_dir
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
 
@@ -41,7 +39,9 @@ class MemoryTool(Tools):
         data_dir.mkdir(parents=True, exist_ok=True)
         path = data_dir / "user_memory.json"
 
-        path.write_text(json.dumps(memory, indent=2, ensure_ascii=False))
+        tmp_path = path.with_suffix(".json.tmp")
+        tmp_path.write_text(json.dumps(memory, indent=2, ensure_ascii=False), encoding="utf-8")
+        tmp_path.replace(path)
 
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
@@ -64,14 +64,15 @@ class MemoryTool(Tools):
             
             memory = self._load_memory()
             if params.key not in memory.get('entries', {}):
-                return ToolResult.success_result(f"Memory not found: {params.id}", metadata = {'found' : False})
-            return ToolResult.success_result(f"Memory found: {params.id} : {memory['entries'][params.key]}")
+                return ToolResult.success_result(f"Memory not found: {params.key}", metadata = {'found' : False})
+            return ToolResult.success_result(f"Memory found: {params.key} : {memory['entries'][params.key]}", metadata = {'found' : True})
                     
         elif params.action.lower() == 'delete':
             if not params.key:
                 return ToolResult.error_result("`key` is required for `delete` action")
+            memory = self._load_memory()
             if params.key not in memory.get('entries', {}):
-                return ToolResult.success_result(f"Memory not found: {params.id}", metadata = {'found' : True})
+                return ToolResult.success_result(f"Memory not found: {params.key}", metadata = {'found' : False})
             
             del memory['entries'][params.key]
             self._save_memory(memory)
@@ -83,7 +84,7 @@ class MemoryTool(Tools):
             if not entries:
                 return ToolResult.success_result(f"No memories found!", metadata = {'found' : False})
             lines = [f"Stored Memories: "]
-            for key, value in sorted(entries.items):
+            for key, value in sorted(entries.items()):
                 lines.append(f"  {key} : {value}")
             return ToolResult.success_result("\n".join(lines), metadata = {'found' : True})
         elif params.action == 'clear':
