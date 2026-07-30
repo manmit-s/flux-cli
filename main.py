@@ -64,12 +64,6 @@ class CLI:
 
                     await self._process_message(user_input)
                     
-                    if user_input == "/exit":
-                        console.print("\n[dim]Goodbye![/dim]")
-                        break
-                    
-                    await self._process_message(user_input)
-                    
                 except KeyboardInterrupt:
                     console.print("\n[dim]Use /exit to quit[/dim]")
                 except EOFError:
@@ -159,7 +153,7 @@ class CLI:
             console.print(f"  Temperature: {self.config.temperature}")
             console.print(f"  Approval: {self.config.approval.value}")
             console.print(f"  Working Dir: {self.config.cwd}")
-            console.print(f"  Max Turns: {self.x_turns}")
+            console.print(f"  Max Turns: {self.config.max_turns}")
             console.print(f"  Hooks Enabled: {self.config.hooks_enabled}")
         elif cmd_name == "/model":
             if cmd_args:
@@ -369,4 +363,5 @@ def main(
         asyncio.run(cli.run_interactive())
              
 
-main()
+if __name__ == "__main__":
+    main()
