@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import os
+import re
 from typing import Any
 from client.response import TokenUsage
 from config.loader import get_data_dir
@@ -49,36 +50,57 @@ class PersistenceManager:
         os.chmod(self.sessions_dir, 0o700)
         os.chmod(self.checkpoints_dir, 0o700)
 
-    def save_session(self, snapshot: SessionSnapshot) -> None:
-        file_path = self.sessions_dir / f"{snapshot.session_id}.json"
+    def _safe_json_path(self, directory, file_id: str):
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", file_id):
+            raise ValueError("Invalid persisted file id")
+        return directory / f"{file_id}.json"
 
-        with open(file_path, "w", encoding="utf-8") as fp:
-            json.dump(snapshot.to_dict(), fp, indent=2)
-
+    def _atomic_write_json(self, file_path, data: dict[str, Any]) -> None:
+        tmp_path = file_path.with_suffix(".json.tmp")
+        with open(tmp_path, "w", encoding="utf-8") as fp:
+            json.dump(data, fp, indent=2)
+        os.replace(tmp_path, file_path)
         os.chmod(file_path, 0o600)
 
+    def save_session(self, snapshot: SessionSnapshot) -> None:
+        file_path = self._safe_json_path(self.sessions_dir, snapshot.session_id)
+        self._atomic_write_json(file_path, snapshot.to_dict())
+
     def load_session(self, session_id: str) -> SessionSnapshot | None:
-        file_path = self.sessions_dir / f"{session_id}.json"
+        try:
+            file_path = self._safe_json_path(self.sessions_dir, session_id)
+        except ValueError:
+            return None
 
         if not file_path.exists():
             return None
 
-        with open(file_path, "r", encoding="utf-8") as fp:
-            data = json.load(fp)
+        try:
+            with open(file_path, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
 
-        return SessionSnapshot.from_dict(data)
+            return SessionSnapshot.from_dict(data)
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+            return None
 
     def list_sessions(self) -> list[dict[str, Any]]:
         sessions = []
         for file_path in self.sessions_dir.glob("*.json"):
-            with open(file_path, "r", encoding="utf-8") as fp:
-                data = json.load(fp)
+            try:
+                with open(file_path, "r", encoding="utf-8") as fp:
+                    data = json.load(fp)
+                session_id = data["session_id"]
+                created_at = data["created_at"]
+                updated_at = data["updated_at"]
+                turn_count = data["turn_count"]
+            except (json.JSONDecodeError, KeyError, OSError):
+                continue
             sessions.append(
                 {
-                    "session_id": data["session_id"],
-                    "created_at": data["created_at"],
-                    "updated_at": data["updated_at"],
-                    "turn_count": data["turn_count"],
+                    "session_id": session_id,
+                    "created_at": created_at,
+                    "updated_at": updated_at,
+                    "turn_count": turn_count,
                 }
             )
 
@@ -88,20 +110,24 @@ class PersistenceManager:
     def save_checkpoint(self, snapshot: SessionSnapshot) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         checkpoint_id = f"{snapshot.session_id}_{timestamp}"
-        file_path = self.checkpoints_dir / f"{checkpoint_id}.json"
+        file_path = self._safe_json_path(self.checkpoints_dir, checkpoint_id)
 
-        with open(file_path, "w", encoding="utf-8") as fp:
-            json.dump(snapshot.to_dict(), fp, indent=2)
-        os.chmod(file_path, 0o600)
+        self._atomic_write_json(file_path, snapshot.to_dict())
         return checkpoint_id
 
     def load_checkpoint(self, checkpoint_id: str) -> SessionSnapshot | None:
-        file_path = self.checkpoints_dir / f"{checkpoint_id}.json"
+        try:
+            file_path = self._safe_json_path(self.checkpoints_dir, checkpoint_id)
+        except ValueError:
+            return None
 
         if not file_path.exists():
             return None
 
-        with open(file_path, "r", encoding="utf-8") as fp:
-            data = json.load(fp)
+        try:
+            with open(file_path, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
 
-        return SessionSnapshot.from_dict(data)
+            return SessionSnapshot.from_dict(data)
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+            return None
