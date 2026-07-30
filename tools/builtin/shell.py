@@ -42,6 +42,7 @@ class ShellTool(Tools):
     description = "Execute a shell command. Use this for running system commands, scripts and CLI tools."
 
     schema = ShellParams
+    MAX_OUTPUT_BYTES = 100 * 1024
 
     async def get_confirmation(
         self, invocation: ToolInvocation
@@ -102,9 +103,13 @@ class ShellTool(Tools):
             start_new_session=True,
         )
 
+        stdout_task = asyncio.create_task(self._read_limited(process.stdout))
+        stderr_task = asyncio.create_task(self._read_limited(process.stderr))
+        wait_task = asyncio.create_task(process.wait())
+
         try:
-            stdout_data, stderr_data = await asyncio.wait_for(
-                process.communicate(),
+            stdout_result, stderr_result, _ = await asyncio.wait_for(
+                asyncio.gather(stdout_task, stderr_task, wait_task),
                 timeout=params.timeout,
             )
         except asyncio.TimeoutError:
@@ -113,8 +118,12 @@ class ShellTool(Tools):
             else:
                 process.kill()
             await process.wait()
+            stdout_task.cancel()
+            stderr_task.cancel()
             return ToolResult.error_result(f"Command timed out after {params.timeout}s")
 
+        stdout_data, stdout_truncated = stdout_result
+        stderr_data, stderr_truncated = stderr_result
         stdout = stdout_data.decode("utf-8", errors="replace")
         stderr = stderr_data.decode("utf-8", errors="replace")
         exit_code = process.returncode
@@ -130,15 +139,43 @@ class ShellTool(Tools):
         if exit_code != 0:
             output += f"\nExit code: {exit_code}"
 
-        if len(output) > 100 * 1024:
-            output = output[: 100 * 1024] + "\n... [output truncated]"
+        truncated = stdout_truncated or stderr_truncated
+        if len(output.encode("utf-8", errors="replace")) > self.MAX_OUTPUT_BYTES:
+            output = output.encode("utf-8", errors="replace")[: self.MAX_OUTPUT_BYTES].decode("utf-8", errors="replace")
+            truncated = True
+        if truncated:
+            output += "\n... [output truncated]"
 
         return ToolResult(
             success=exit_code == 0,
             output=output,
             error=stderr if exit_code != 0 else None,
+            truncated=truncated,
             exit_code=exit_code,
         )
+
+    async def _read_limited(self, stream) -> tuple[bytes, bool]:
+        if stream is None:
+            return b"", False
+
+        chunks: list[bytes] = []
+        total = 0
+        truncated = False
+
+        while True:
+            chunk = await stream.read(8192)
+            if not chunk:
+                break
+
+            remaining = self.MAX_OUTPUT_BYTES - total
+            if remaining > 0:
+                chunks.append(chunk[:remaining])
+
+            total += len(chunk)
+            if total > self.MAX_OUTPUT_BYTES:
+                truncated = True
+
+        return b"".join(chunks), truncated
 
     def _build_environment(self) -> dict[str, str]:
         env = os.environ.copy()
