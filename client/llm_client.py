@@ -25,6 +25,7 @@ class LLMClient:
             self._client = AsyncOpenAI(
                 api_key = api_key,
                 base_url = self.config.base_url,
+                timeout=120.0,
             )
         return self._client
 
@@ -65,6 +66,8 @@ class LLMClient:
             #to cap max tokens for sometime to comply with openrouter
             "max_tokens": 4000
         }
+        if stream:
+            kwargs["stream_options"] = {"include_usage": True}
 
         if tools:
             kwargs['tools'] = self._build_tools(tools)
@@ -124,11 +127,12 @@ class LLMClient:
         tool_calls: dict[int, dict[str, str]] = {}
         async for chunk in response:
             if hasattr(chunk, "usage") and chunk.usage:
+                prompt_details = getattr(chunk.usage, "prompt_tokens_details", None)
                 usage = TokenUsage(
                     prompt_tokens = chunk.usage.prompt_tokens,
                     completion_tokens = chunk.usage.completion_tokens,
                     total_tokens = chunk.usage.total_tokens,
-                    cached_tokens = chunk.usage.prompt_tokens_details.cached_tokens,
+                    cached_tokens = getattr(prompt_details, "cached_tokens", 0) or 0,
                 )
             
             if not chunk.choices:
@@ -203,6 +207,11 @@ class LLMClient:
     
     async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]) -> StreamEvent:
         response = await client.chat.completions.create(**kwargs)
+        if not response.choices:
+            return StreamEvent(
+                type=StreamEventType.ERROR,
+                error="LLM response contained no choices",
+            )
         choice = response.choices[0]
         message = choice.message
 
@@ -223,11 +232,12 @@ class LLMClient:
 
         usage = None
         if response.usage:
+            prompt_details = getattr(response.usage, "prompt_tokens_details", None)
             usage = TokenUsage(
                 prompt_tokens = response.usage.prompt_tokens,
                 completion_tokens = response.usage.completion_tokens,
                 total_tokens = response.usage.total_tokens,
-                cached_tokens = response.usage.prompt_tokens_details.cached_tokens,
+                cached_tokens = getattr(prompt_details, "cached_tokens", 0) or 0,
             )
         
         return StreamEvent(
