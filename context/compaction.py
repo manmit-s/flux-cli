@@ -1,9 +1,12 @@
+import logging
 from typing import Any
 
 from client.llm_client import LLMClient
 from client.response import StreamEventType, TokenUsage
 from context.manager import ContextManager
 from prompts.system import get_compression_prompt
+
+logger = logging.getLogger(__name__)
 
 
 class ChatCompactor:
@@ -22,7 +25,7 @@ class ChatCompactor:
 
             if role == 'tool':
                 tool_id = msg.get('tool_call_id', 'unknown')
-                truncated = content[:2000] if content > 2000 else content
+                truncated = content[:2000] if len(content) > 2000 else content
                 if len(content) > 2000:
                     truncated += "\n ..... [tool output truncated]"
 
@@ -81,7 +84,8 @@ class ChatCompactor:
             ):
                 if event.type == StreamEventType.MESSAGE_COMPLETE:
                     usage = event.usage
-                    summary = event.text_delta.content
+                    if event.text_delta:
+                        summary = event.text_delta.content
 
             if not summary or not usage:
                 return None, None
@@ -89,5 +93,6 @@ class ChatCompactor:
             return summary, usage
         
         except Exception:
+            logger.exception("Failed to compact chat context")
             return None, None
         
