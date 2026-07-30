@@ -81,29 +81,42 @@ class CLI:
         if not self.agent:
             return None
         
-        assistant_streaming = False
+        assistant_buffer: list[str] = []
         final_response: str | None = None
+        streaming_markdown = False
         
         async for event in self.agent.run(message):
-            # print(event)
             if event.type == AgentEventType.TEXT_DELTA:
                 content = event.data.get("content", "")
-                if not assistant_streaming:
-                    self.tui.begin_assistant()
-                    assistant_streaming = True
-                self.tui.stream_assistant_delta(content)
+                if not streaming_markdown:
+                    self.tui.begin_streaming_markdown()
+                    streaming_markdown = True
+                self.tui.stream_markdown_delta(content)
+                assistant_buffer.append(content)
 
             elif event.type == AgentEventType.TEXT_COMPLETE:
                 final_response = event.data.get("content")
-                if assistant_streaming:
+                content = final_response or "".join(assistant_buffer)
+                if streaming_markdown:
+                    self.tui.end_streaming_markdown()
+                    streaming_markdown = False
+                elif content:
+                    self.tui.begin_assistant()
+                    self.tui.render_assistant_markdown(content)
                     self.tui.end_assistant()
-                    assistant_streaming = False
+                assistant_buffer.clear()
             
             elif event.type == AgentEventType.AGENT_ERROR:
                 error_msg = event.data.get("error", "Unknown error")
+                if streaming_markdown:
+                    self.tui.end_streaming_markdown()
+                    streaming_markdown = False
                 console.print(error_msg, style="error")
 
             elif event.type == AgentEventType.TOOL_CALL_START:
+                if streaming_markdown:
+                    self.tui.end_streaming_markdown()
+                    streaming_markdown = False
                 tool_name = event.data.get("name", "unknown")
 
                 tool_kind = self._get_tool_kind(tool_name)
@@ -132,6 +145,8 @@ class CLI:
                     event.data.get('truncated', False),
                     event.data.get('exit_code')
                 )                    
+        if streaming_markdown:
+            self.tui.end_streaming_markdown()
         return final_response
     
     async def _handle_command(self, command: str) -> bool:

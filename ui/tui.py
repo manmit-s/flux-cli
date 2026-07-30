@@ -10,6 +10,7 @@ from rich import box
 from rich.syntax import Syntax
 from rich.prompt import Prompt
 from rich.markdown import Markdown
+from rich.live import Live
 
 from config.config import Config
 from tools.base import ToolConfirmation
@@ -75,8 +76,28 @@ class TUI:
 
         self._assistant_stream_open = False
 
+    def begin_streaming_markdown(self) -> None:
+        self.console.print()
+        self.console.print(Rule(Text("Assistant", style="assistant")))
+        self._markdown_buffer = ""
+        self._live = Live(Markdown(""), console=self.console, refresh_per_second=10, transient=False)
+        self._live.start()
+
+    def stream_markdown_delta(self, content: str) -> None:
+        self._markdown_buffer += content
+        self._live.update(Markdown(self._markdown_buffer))
+
+    def end_streaming_markdown(self) -> None:
+        if hasattr(self, '_live') and self._live:
+            self._live.stop()
+            self._live = None
+        self.console.print()
+
     def stream_assistant_delta(self, content: str) -> None:
         self.console.print(content, end="", markup=False)
+
+    def render_assistant_markdown(self, content: str) -> None:
+        self.console.print(Markdown(content))
 
     def _ordered_args(self, tool_name: str, args: dict[str, Any]) -> list[tuple]:
         _PREFERRED_ORDER = {
