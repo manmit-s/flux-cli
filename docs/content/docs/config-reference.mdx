@@ -1,0 +1,120 @@
+---
+title: Configuration Reference
+description: Complete reference for all configuration options.
+---
+
+# Configuration Reference
+
+This page provides a complete reference for all configuration options in Flux-CLI.
+
+## Complete Configuration Schema
+
+```toml
+# API Configuration
+api_key = "sk-or-v1-your-key"           # API key (can also use env var)
+base_url = "https://openrouter.ai/api/v1"  # API base URL
+
+# Model Configuration
+[model]
+name = "mistralai/devstral-2512:free"    # Model identifier
+temperature = 1.0                         # 0.0 - 2.0
+context_window = 256000                    # Max context tokens
+
+# Session Configuration
+max_turns = 100                          # Max agent loop iterations
+
+# Approval Policy
+[approval]
+policy = "on-request"                     # on-request | on-failure | auto | auto-edit | never | yolo
+
+# Shell Environment
+[shell_environment]
+ignore_default_excludes = false           # Don't filter default patterns
+exclude_patterns = ["*KEY*", "*TOKEN*", "*SECRET*"]  # Filtered env vars
+set_vars = { MY_VAR = "value" }          # Custom env vars
+
+# Hooks
+hooks_enabled = true                      # Enable/disable all hooks
+
+[[hooks]]
+name = "my-hook"                          # Hook identifier
+trigger = "before_agent"                  # Trigger point
+command = "echo 'Agent started'"          # Shell command to execute
+script = "path/to/script.sh"              # Or script file path
+timeout_sec = 30                          # Execution timeout
+enabled = true                            # Enable/disable this hook
+
+# Tool Restrictions
+allowed_tools = ["read_file", "grep"]     # If set, only these tools are available
+
+# Developer Instructions
+developer_instructions = "Follow PEP 8"   # From AGENT.md or config
+user_instructions = "Use TypeScript"      # Custom user instructions
+
+# MCP Servers
+[mcp_servers.filesystem]
+command = "npx"                           # stdio transport
+args = ["-y", "@modelcontextprotocol/server-filesystem"]
+env = { KEY = "value" }                   # Server environment
+cwd = "/path/to/server"                   # Server working directory
+enabled = true
+startup_timeout_sec = 10                  # Connection timeout
+tool_timeout_sec = 120                    # Tool execution timeout
+
+[mcp_servers.remote]
+url = "https://example.com/mcp"           # SSE transport
+enabled = true
+startup_timeout_sec = 10
+
+# Working Directory
+# cwd = "/path/to/project"                # Override via CLI --cwd flag
+```
+
+## Approval Policy Reference
+
+| Policy | Behavior | Use Case |
+|---|---|---|
+| `on-request` | Ask for confirmation on mutating operations | **Default** — Safe for most users |
+| `on-failure` | Auto-approve, but ask if something fails | CI/CD pipelines |
+| `auto` | Auto-approve all operations | Trusted environments |
+| `auto-edit` | Auto-approve safe commands, confirm edits | Development |
+| `never` | Never auto-approve anything | High-security environments |
+| `yolo` | Approve everything | Testing/demo only |
+
+## Hook Trigger Reference
+
+| Trigger | When | Environment Variables |
+|---|---|---|
+| `before_agent` | Before agent starts processing | `AI_AGENT_TRIGGER`, `AI_AGENT_CWD`, `AI_AGENT_USER_MESSAGE` |
+| `after_agent` | After agent finishes | + `AI_AGENT_RESPONSE` |
+| `before_tool` | Before a tool executes | + `AI_AGENT_TOOL_NAME`, `AI_AGENT_TOOL_PARAMS` |
+| `after_tool` | After a tool completes | + `AI_AGENT_TOOL_RESULT` |
+| `on_error` | When an error occurs | `AI_AGENT_ERROR` |
+
+## MCP Server Configuration Reference
+
+| Field | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `enabled` | No | bool | `true` | Enable/disable this server |
+| `startup_timeout_sec` | No | float | `10` | Connection timeout in seconds |
+| `tool_timeout_sec` | No | float | `120` | Tool execution timeout |
+| `command` | Conditional | string | — | Command for stdio transport |
+| `args` | No | string[] | `[]` | Arguments for stdio transport |
+| `env` | No | object | `{}` | Environment variables |
+| `cwd` | No | string | — | Working directory |
+| `url` | Conditional | string | — | URL for SSE transport |
+
+## Config File Locations
+
+| Config Type | Linux | macOS | Windows |
+|---|---|---|---|
+| **System** | `~/.config/flux-cli/config.toml` | `~/Library/Application Support/flux-cli/config.toml` | `%APPDATA%\flux-cli\config.toml` |
+| **Project** | `.flux-cli/config.toml` | `.flux-cli/config.toml` | `.flux-cli/config.toml` |
+
+## Validation Rules
+
+- **MCP Server**: Must have either `command` (stdio) or `url` (SSE), not both
+- **Hook**: Must have either `command` or `script`, not both
+- **Temperature**: Must be between 0.0 and 2.0
+- **API Key**: Must be set either in config or environment
+- **Working Directory**: Must exist on the filesystem

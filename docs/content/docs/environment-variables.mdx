@@ -1,0 +1,73 @@
+---
+title: Environment Variables
+description: Environment variables used by Flux-CLI.
+---
+
+# Environment Variables
+
+Flux-CLI uses environment variables for sensitive configuration that should not be stored in configuration files.
+
+## Core Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `API_KEY` | ✅ Yes | — | Your LLM provider API key |
+| `BASE_URL` | ❌ No | `https://openrouter.ai/api/v1` | API base URL for the LLM provider |
+
+## Using .env Files
+
+Create a `.env` file in your working directory:
+
+<CodeExample
+  title=".env"
+  language="bash"
+  code={`# Required: Your API key
+API_KEY=sk-or-v1-your-key-here
+
+# Optional: Override the base URL
+BASE_URL=https://openrouter.ai/api/v1`}
+  description="Dotenv files are loaded automatically by Flux-CLI on startup."
+/>
+
+## How Environment Variables Are Loaded
+
+1. **Dotenv loading** — `main.py` calls `dotenv.load_dotenv()` to load `.env` files
+2. **Config file fallback** — If `api_key` or `base_url` is set in the TOML config, it's exported to the environment
+3. **Environment override** — Existing environment variables take precedence
+
+<CodeExample
+  title="Config to environment flow"
+  language="python"
+  code={`# From config/loader.py
+if "api_key" in config_dict and isinstance(config_dict["api_key"], str):
+    if not os.environ.get("API_KEY"):
+        os.environ["API_KEY"] = config_dict["api_key"]
+
+if "base_url" in config_dict and isinstance(config_dict["base_url"], str):
+    if not os.environ.get("BASE_URL"):
+        os.environ["BASE_URL"] = config_dict["base_url"]`}
+  description="Configuration values are exported to the environment if not already set."
+/>
+
+## Hook Environment Variables
+
+When lifecycle hooks execute, the following environment variables are available:
+
+| Variable | Trigger | Description |
+|---|---|---|
+| `AI_AGENT_TRIGGER` | All | The hook trigger name |
+| `AI_AGENT_CWD` | All | The current working directory |
+| `AI_AGENT_USER_MESSAGE` | Before/After Agent | The user's message |
+| `AI_AGENT_RESPONSE` | After Agent | The agent's response |
+| `AI_AGENT_TOOL_NAME` | Before/After Tool | The tool being executed |
+| `AI_AGENT_TOOL_PARAMS` | Before/After Tool | JSON-serialized tool parameters |
+| `AI_AGENT_TOOL_RESULT` | After Tool | The tool execution result |
+| `AI_AGENT_ERROR` | On Error | The error message |
+
+## Shell Environment Variables
+
+When executing shell commands, Flux-CLI sanitizes the environment:
+
+- **Default excludes** — Patterns like `*KEY*`, `*TOKEN*`, `*SECRET*` are filtered out
+- **Custom excludes** — Configured via `shell_environment.exclude_patterns`
+- **Custom vars** — Set additional variables via `shell_environment.set_vars`

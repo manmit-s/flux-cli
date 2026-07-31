@@ -1,0 +1,118 @@
+---
+title: Authentication
+description: How to configure authentication for Flux-CLI.
+---
+
+# Authentication
+
+Flux-CLI authenticates with your LLM provider using an API key. The default provider is **OpenRouter**, which provides access to 200+ models through a single API.
+
+## Getting an API Key
+
+### OpenRouter (Recommended)
+
+1. Visit [OpenRouter](https://openrouter.ai/)
+2. Sign up for a free account
+3. Navigate to the API Keys section
+4. Create a new key (free tier available for many models)
+
+### Other Providers
+
+Flux-CLI supports any OpenAI-compatible API provider:
+
+| Provider | Base URL | Notes |
+|---|---|---|
+| **OpenAI** | `https://api.openai.com/v1` | Official OpenAI API |
+| **OpenRouter** | `https://openrouter.ai/api/v1` | Multi-model access, free tier |
+| **Anthropic via OpenRouter** | `https://openrouter.ai/api/v1` | Use Anthropic model names |
+| **Local (Ollama, vLLM)** | `http://localhost:11434/v1` | Self-hosted models |
+
+## Configuration Methods
+
+### Method 1: Environment Variable (Recommended)
+
+<CodeExample
+  title="Set via .env file"
+  language="bash"
+  code={`API_KEY=sk-or-v1-your-key-here
+BASE_URL=https://openrouter.ai/api/v1`}
+  description="The .env file is loaded automatically. Never commit this file."
+/>
+
+### Method 2: Configuration Wizard
+
+Run the interactive setup wizard:
+
+<CodeExample
+  title="Run config wizard"
+  language="bash"
+  code={`python main.py config`}
+  description="Launches an interactive wizard that guides you through API key setup."
+/>
+
+The wizard will prompt you for:
+
+1. **API Key** — Your provider API key
+2. **Base URL** — The API endpoint URL (defaults to OpenRouter)
+3. **Model ID** — The default model to use
+
+### Method 3: TOML Config File
+
+<CodeExample
+  title="~/.config/flux-cli/config.toml"
+  language="toml"
+  code={`api_key = "sk-or-v1-your-key-here"
+base_url = "https://openrouter.ai/api/v1"
+
+[model]
+name = "nvidia/nemotron-3-super-120b-a12b"`}
+  description="Store API key in the system config file."
+/>
+
+<Callout type="warning" title="Security Warning">
+Never commit your API key to version control. Use `.env` files (gitignored by default) or the system config file outside your project directory.
+</Callout>
+
+## How It Works
+
+The authentication flow:
+
+1. **Load dotenv** — `main.py` calls `dotenv.load_dotenv()` to load `.env`
+2. **Check config** — If `api_key` is in the TOML config, it's exported to the environment
+3. **Lazy client init** — The `LLMClient` creates the `AsyncOpenAI` client lazily when first needed
+4. **API call** — The API key is passed to the OpenAI client via the environment variable
+
+<CodeExample
+  title="Lazy client initialization"
+  language="python"
+  code={`# From client/llm_client.py
+class LLMClient:
+    def get_client(self) -> AsyncOpenAI:
+        if self._client is None:
+            api_key = os.getenv("API_KEY")
+            self._client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=self.config.base_url,
+                timeout=120.0,
+            )
+        return self._client`}
+  description="The OpenAI client is created on first use, not at initialization."
+/>
+
+## Common Issues
+
+### "No API key found" Error
+
+This means the `API_KEY` environment variable is not set. Ensure:
+
+1. Your `.env` file exists with `API_KEY=your-key`
+2. The `.env` file is in the directory where you run Flux-CLI
+3. You've reloaded the shell after adding the env var
+
+### "401 Unauthorized" Error
+
+Your API key is either invalid or expired. Check:
+
+1. The key is still active on your provider's dashboard
+2. You haven't exceeded your rate limit
+3. The key has the necessary permissions

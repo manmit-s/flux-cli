@@ -1,0 +1,177 @@
+---
+title: Configuration
+description: How to configure Flux-CLI for your needs.
+---
+
+# Configuration
+
+Flux-CLI uses a **multi-level configuration system** that merges settings from system-wide, project-level, and CLI override sources.
+
+## Configuration Architecture
+
+The configuration loading pipeline follows this order (later sources override earlier ones):
+
+```
+1. System Config  →  ~/.config/flux-cli/config.toml (or %APPDATA%\flux-cli\config.toml)
+2. Project Config →  .flux-cli/config.toml (in the working directory)
+3. CLI Overrides  →  Command-line flags and slash commands
+```
+
+## Configuration File Format
+
+Configuration is written in **TOML** format. Here's a complete example:
+
+<CodeExample
+  title="~/.config/flux-cli/config.toml"
+  language="toml"
+  code={`# Flux-CLI System Configuration
+api_key = "your-api-key-here"
+base_url = "https://openrouter.ai/api/v1"
+
+[model]
+name = "nvidia/nemotron-3-super-120b-a12b"
+temperature = 0.7
+context_window = 128000
+
+max_turns = 50
+
+[approval]
+policy = "on-request"
+
+[hooks]
+enabled = true
+
+[[hooks]]
+name = "notify-start"
+trigger = "before_agent"
+command = "echo 'Agent starting...'"
+
+[[hooks]]
+name = "notify-error"
+trigger = "on_error"
+command = "echo 'Agent encountered an error'"
+
+[shell_environment]
+exclude_patterns = ["*KEY", "*TOKEN", "*SECRET"]
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem"]
+enabled = true`}
+  description="Complete system configuration with model, hooks, and MCP server settings."
+/>
+
+## Config Sections
+
+### Model Configuration
+
+```toml
+[model]
+name = "mistralai/devstral-2512:free"  # Model identifier
+temperature = 1.0                       # Creativity (0.0 - 2.0)
+context_window = 256000                 # Token context limit
+```
+
+### Approval Policy
+
+```toml
+[approval]
+policy = "on-request"  # on-request | on-failure | auto | auto-edit | never | yolo
+```
+
+### Hooks
+
+```toml
+hooks_enabled = true
+
+[[hooks]]
+name = "my-hook"
+trigger = "before_agent"  # before_agent | after_agent | before_tool | after_tool | on_error
+command = "python3 my-script.py"
+timeout_sec = 30
+```
+
+### Shell Environment
+
+```toml
+[shell_environment]
+ignore_default_excludes = false
+exclude_patterns = ["*KEY*", "*TOKEN*", "*SECRET*"]
+set_vars = { MY_VAR = "value" }
+```
+
+### MCP Servers
+
+```toml
+[mcp_servers.my-server]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem"]
+enabled = true
+startup_timeout_sec = 10
+tool_timeout_sec = 120
+
+# For HTTP/SSE transport:
+[mcp_servers.remote-server]
+url = "https://example.com/mcp"
+enabled = true
+```
+
+## Project-Level Configuration
+
+Create a `.flux-cli/config.toml` file in your project root:
+
+<CodeExample
+  title=".flux-cli/config.toml"
+  language="toml"
+  code={`# Project-specific overrides
+[model]
+name = "anthropic/claude-3.5-sonnet"
+
+[approval]
+policy = "auto"
+
+[shell_environment]
+set_vars = { PROJECT_ROOT = "/path/to/project" }`}
+  description="Project-level configuration overrides the system config."
+/>
+
+## AGENT.md Files
+
+Flux-CLI supports **AGENT.md** files — a specification for providing developer instructions to the AI agent. Place an `AGENT.md` file in your project root or in the `.flux-cli/` directory.
+
+<CodeExample
+  title="AGENT.md"
+  language="markdown"
+  code={`# Project Guidelines
+
+## Coding Conventions
+- Use 4-space indentation
+- Follow PEP 8 style guide
+- Write tests for all new features
+
+## Project Structure
+- Source code in /src
+- Tests in /tests
+- Documentation in /docs`}
+  description="AGENT.md files provide context-aware instructions to the agent."
+/>
+
+## Runtime Configuration Changes
+
+You can modify configuration at runtime using slash commands:
+
+| Command | Effect |
+|---|---|
+| `/model <name>` | Switch the LLM model |
+| `/approval <mode>` | Change the approval policy |
+| `/config` | View the active configuration |
+
+## Configuration Validation
+
+Flux-CLI validates the configuration when loading:
+
+- **API key presence** — Must be set either in config or environment
+- **Working directory** — Must exist
+- **Model config** — Temperature must be 0.0-2.0
+- **MCP server config** — Must have either `command` or `url`, not both
+- **Hook config** — Must have either `command` or `script`

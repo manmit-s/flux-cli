@@ -1,0 +1,209 @@
+---
+title: Core Components
+description: Deep dive into the core components that make Flux-CLI work.
+---
+
+# Core Components
+
+Flux-CLI is built from several core components that work together to create a powerful AI coding agent.
+
+## 1. LLM Client (`client/llm_client.py`)
+
+The LLM Client is a wrapper around the **AsyncOpenAI** client that provides:
+
+- **Lazy initialization** — The OpenAI client is created on first use
+- **Streaming support** — Real-time token streaming with incremental tool call events
+- **Retry logic** — Exponential backoff for rate limits and connection errors
+- **Tool call streaming** — Yields `TOOL_CALL_START`, `TOOL_CALL_DELTA`, `TOOL_CALL_COMPLETE` events
+
+<CodeExample
+  title="LLM Client Interface"
+  language="python"
+  code={`class LLMClient:
+    async def chat_completion(
+        self,
+        messages: list[dict],
+        tools: list[dict] | None = None,
+        stream: bool = True,
+    ) -> AsyncGenerator[StreamEvent, None]:
+        # Build kwargs with model, messages, stream
+        # If tools are provided, convert to OpenAI function schemas
+        # Handle retries with exponential backoff
+        # Yield stream events (TEXT_DELTA, TOOL_CALL_*, MESSAGE_COMPLETE)
+        ...
+`}
+  description="The main interface for LLM interactions."
+/>
+
+### Retry Strategy
+
+| Error Type | Retry Behavior |
+|---|---|
+| `RateLimitError` | Retry 3 times with 2^attempt exponential backoff |
+| `APIConnectionError` | Retry 3 times with 2^attempt exponential backoff |
+| `APIError` | Fail immediately, no retry |
+
+### Why Lazy Initialization?
+
+The OpenAI client is not created until the first API call to:
+
+1. **Avoid unnecessary API key validation** at startup
+2. **Allow configuration changes** before the first API call
+3. **Reduce startup time** — Creating the client is fast, but not needed if just showing help
+
+## 2. Agent Engine (`agent/agent.py`)
+
+The Agent Engine is the core orchestrator. It implements the **multi-turn agentic loop**.
+
+<CodeExample
+  title="Agent Loop Structure"
+  language="python"
+  code={`class Agent:
+    async def _agentic_loop(self) -> AsyncGenerator[AgentEvent, None]:
+        for turn_num in range(max_turns):
+            # 1. Check context compression
+            # 2. Get tool schemas
+            # 3. Call LLM with streaming
+            # 4. Collect tool calls
+            # 5. Execute tools (with approval)
+            # 6. Check loop detection
+            # 7. Update context
+            ...
+`}
+  description="The agent loop runs for max_turns, handling tool calls each turn."
+/>
+
+### Why Async Generator?
+
+The agent uses `async for event in agent.run(message):` instead of returning a complete response. This design choice:
+
+1. **Enables real-time streaming** — Users see tokens as they're generated
+2. **Allows incremental UI** — The TUI can render tool calls as they happen
+3. **Supports cancellation** — The loop can be interrupted gracefully
+4. **Provides visibility** — Every step of the agent's reasoning is visible
+
+## 3. Context Manager (`context/manager.py`)
+
+The Context Manager handles conversation history, token tracking, and automatic compression.
+
+<CodeExample
+  title="Context Manager Interface"
+  language="python"
+  code={`class ContextManager:
+    def add_user_message(self, content: str) -> None
+    def add_assistant_message(self, content: str, tool_calls: list) -> None
+    def add_tool_result(self, tool_call_id: str, content: str) -> None
+    def get_messages(self) -> list[dict]
+    def needs_compression(self) -> bool
+    def replace_with_summary(self, summary: str) -> None
+    def prune_tool_outputs(self) -> int
+    def clear(self) -> None
+`}
+  description="The context manager maintains conversation history with automatic compression."
+/>
+
+### Compression Trigger
+
+Compression is triggered when the total token count exceeds **80% of the context window**:
+
+```python
+def needs_compression(self) -> bool:
+    context_limit = self.config.model.context_window
+    current_tokens = self._count_tokens()
+    return current_tokens > (context_limit * 0.8)
+```
+
+### Why 80%?
+
+The 80% threshold is a deliberate design choice:
+
+1. **Buffer room** — Leaves room for the response and tool calls
+2. **Avoids hitting limits** — Prevents context window overflow during a long response
+3. **Proactive not reactive** — Compresses before it's needed, not after the window is full
+
+## 4. Tool Registry (`tools/registry.py`)
+
+The Tool Registry manages all tools and handles invocation with validation and approval.
+
+<CodeExample
+  title="Tool Registry Interface"
+  language="python"
+  code={`class ToolRegistry:
+    def register(self, tool: Tools) -> None
+    def register_mcp_tool(self, tool: Tools) -> None
+    def get(self, name: str) -> Tools | None
+    def get_tools(self) -> list[Tools]
+    def get_schemas(self) -> list[dict]
+    async def invoke(self, name, params, cwd, hook_system, approval_manager) -> ToolResult
+`}
+  description="The registry manages all tools and handles invocation with validation."
+/>
+
+## 5. Safety & Approval (`safety/approval.py`)
+
+The safety system implements multi-layered protection:
+
+```python
+class ApprovalPolicy(str, Enum):
+    ON_REQUEST = "on-request"    # Default: ask for confirmation
+    ON_FAILURE = "on-failure"    # Auto-approve, but ask on failure
+    AUTO = "auto"                # Auto-approve all
+    AUTO_EDIT = "auto-edit"      # Auto-approve safe, confirm edits
+    NEVER = "never"              # Never auto-approve
+    YOLO = "yolo"                # Approve everything
+```
+
+### Command Safety Detection
+
+```python
+DANGEROUS_PATTERNS = [
+    r"rm\s+(-rf?|--recursive)\s+[/~]",  # rm -rf /
+    r"dd\s+if=",                         # Disk destroyer
+    r"mkfs",                             # Format filesystem
+    r":\(\)\s*\{\s*:\|:&\s*\}\s*;",     # Fork bomb
+    ...
+]
+
+SAFE_PATTERNS = [
+    r"^(ls|dir|pwd|cd|echo|cat)(\s|$)",  # Info commands
+    r"^git\s+(status|log|diff|show)(\s|$)",  # Git read-only
+    ...
+]
+```
+
+## 6. Hook System (`hooks/hook_system.py`)
+
+The hook system executes shell commands at specific lifecycle events.
+
+<CodeExample
+  title="Hook System Interface"
+  language="python"
+  code={`class HookSystem:
+    async def trigger_before_agent(self, user_message: str)
+    async def trigger_after_agent(self, user_message: str, agent_response: str | None)
+    async def trigger_before_tool(self, tool_name: str, tool_params: dict)
+    async def trigger_after_tool(self, tool_name: str, tool_params: dict, tool_result: ToolResult)
+    async def trigger_on_error(self, error: Exception)
+`}
+  description="The hook system triggers shell commands at lifecycle events."
+/>
+
+## 7. Terminal UI (`ui/tui.py`)
+
+The TUI engine provides a Rich-powered interface with:
+
+- **Gradient ASCII logo** — Multi-stop horizontal color gradient
+- **Streaming Markdown** — Live rendering during response generation
+- **Tool panels** — Formatted panels with parameter grids and status indicators
+- **Diff rendering** — Unified diff with Dracula syntax highlighting
+- **Slash command dashboards** — Interactive panels for help, config, stats
+
+### Theme Colors
+
+The TUI uses a consistent color palette derived from the ASCII logo:
+
+```
+#e7aafb (lavender pink)  →  tool names, warnings
+#a191f8 (slate blue)     →  user input, highlights
+#8bcefc (sky blue)       →  info, read tools
+#7fe4eb (cyan)           →  success, network tools

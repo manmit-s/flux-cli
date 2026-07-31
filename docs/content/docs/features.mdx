@@ -1,0 +1,104 @@
+---
+title: Features
+description: Explore the complete feature set of Flux-CLI.
+---
+
+# Features
+
+Flux-CLI comes packed with features designed to make AI-assisted development powerful, safe, and extensible.
+
+## Agent Engine
+
+The core of Flux-CLI is a sophisticated agent engine that orchestrates LLM interactions with tool execution.
+
+- **Multi-turn reasoning loop** — The agent can make multiple tool calls per turn, building toward complex solutions
+- **Streaming responses** — Real-time token streaming with incremental tool call events
+- **Event-driven architecture** — Every stage of the agent lifecycle emits events that can be consumed by the UI or hooks
+- **Maximum turns enforcement** — Configurable turn limits prevent runaway agents
+- **Loop detection** — Automatically detects and breaks repetitive behavior patterns
+
+## Tool System
+
+Flux-CLI ships with 11 built-in tools and supports unlimited custom tools.
+
+<Callout type="info" title="11 Built-in Tools">
+| Tool | Kind | Description |
+|---|---|---|
+| `read_file` | READ | Read text files with line numbers, offset/limit, binary detection |
+| `write_file` | WRITE | Create/overwrite files with automatic parent directory creation |
+| `edit` | WRITE | Surgical text replacement with uniqueness checks |
+| `shell` | SHELL | Command execution with timeout, blocked command safety, environment control |
+| `list_dir` | READ | Directory listing with hidden file toggle |
+| `grep` | READ | Regex search across files with case-insensitive option |
+| `glob` | READ | File pattern matching with recursive ** support |
+| `web_search` | NETWORK | DuckDuckGo web search integration |
+| `web_fetch` | NETWORK | HTTP fetch with automatic fallback to proxy on 403/5xx |
+| `todos` | MEMORY | Session-scoped task tracking (add/complete/list/clear) |
+| `memory` | MEMORY | Persistent user memory stored across sessions |
+</Callout>
+
+### Custom Tool Discovery
+
+Drop a Python file in `.flux-cli/tools/` and Flux-CLI automatically discovers and registers it. Any class that extends the `Tools` base class with a name, schema, and `execute` method works out of the box.
+
+### MCP Tools
+
+Connect any MCP server via stdio or SSE transport and its tools become available to the agent automatically.
+
+## Safety & Approval System
+
+Flux-CLI's safety system operates at multiple levels:
+
+- **6 Approval Policies**: `on-request`, `on-failure`, `auto`, `auto-edit`, `never`, `yolo`
+- **Command Blocking**: Hard-coded dangerous patterns that are always rejected
+- **Safe Command Detection**: Read-only commands like `ls`, `grep`, `git status` are auto-approved
+- **Path Validation**: Operations outside the working directory require explicit approval
+- **Environment Sanitization**: Shell execution filters sensitive environment variables
+
+## Lifecycle Hooks
+
+Configure shell commands that trigger at 6 different points in the agent's lifecycle:
+
+| Hook | Trigger Point | Environment Variables |
+|---|---|---|
+| `before_agent` | Before agent processing | `AI_AGENT_TRIGGER`, `AI_AGENT_CWD`, `AI_AGENT_USER_MESSAGE` |
+| `after_agent` | After agent finishes | + `AI_AGENT_RESPONSE` |
+| `before_tool` | Before tool execution | + `AI_AGENT_TOOL_NAME`, `AI_AGENT_TOOL_PARAMS` |
+| `after_tool` | After tool completes | + `AI_AGENT_TOOL_RESULT` |
+| `on_error` | On errors/exceptions | `AI_AGENT_ERROR` |
+
+## Session Management
+
+- **Persistent sessions** — Save, resume, and manage sessions across invocations
+- **Checkpoints** — Create named checkpoints within a session for safe exploration
+- **Statistics** — View token usage, turn counts, and tool usage metrics
+
+## Context Management
+
+- **Automatic compression** — Triggers at 80% of context window to keep conversations within limits
+- **Intelligent summarization** — Uses a child LLM to summarize conversation history
+- **Tool output pruning** — Protects recent outputs while pruning older ones to save space
+- **Token tracking** — Real-time token counting via tiktoken
+
+## MCP Integration
+
+- **Dual transport support** — stdio for local servers, SSE for remote servers
+- **Automatic tool registration** — MCP server tools are automatically registered with the agent
+- **Timeout control** — Configurable startup and tool execution timeouts
+- **Error resilience** — Graceful handling of server connection failures
+
+## Sub-Agent System
+
+- **Codebase Investigator** — Explores code structure, patterns, and implementations without modifying files
+- **Code Reviewer** — Reviews code changes for bugs, code smells, and security issues
+- **Isolated context** — Each sub-agent runs with its own context and tool restrictions
+
+## Terminal UI
+
+- **Gradient ASCII logo** — Multi-color horizontal gradient using brand colors
+- **Streaming Markdown** — Live Markdown rendering during response generation
+- **Tool panels** — Beautiful Rich panels with parameter grids and status indicators
+- **Diff rendering** — Unified diff display with Dracula syntax highlighting
+- **Slash commands** — Interactive dashboards for help, config, stats, and more
+- **Cross-platform** — Windows UTF-8 reconfigure and VT100/ANSI support
+

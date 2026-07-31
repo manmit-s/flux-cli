@@ -1,0 +1,178 @@
+---
+title: Command Reference
+description: Detailed reference for all slash commands in Flux-CLI.
+---
+
+# Command Reference
+
+This page provides detailed information about every slash command available in Flux-CLI's interactive mode.
+
+## Session Management
+
+### `/exit` or `/quit`
+
+Exits the interactive session gracefully.
+
+```text
+❯ /exit
+```
+
+### `/clear`
+
+Clears the conversation history and resets the loop detector.
+
+```text
+❯ /clear
+Conversation cleared
+```
+
+### `/save`
+
+Saves the current session state to disk for later resumption.
+
+```text
+❯ /save
+Session saved: 550e8400-e29b-41d4-a716-446655440000
+```
+
+### `/sessions`
+
+Lists all previously saved sessions.
+
+```text
+❯ /sessions
+
+Saved Sessions
+  • 550e8400-e29b-41d4-a716-446655440000 (turns: 12, updated: 2024-01-15T10:30:00)
+  • 660e8400-e29b-41d4-a716-446655440001 (turns: 5, updated: 2024-01-14T15:20:00)
+```
+
+### `/resume <session_id>`
+
+Resumes a previously saved session, restoring its context and history.
+
+```text
+❯ /resume 550e8400-e29b-41d4-a716-446655440000
+Resumed session: 550e8400-e29b-41d4-a716-446655440000
+```
+
+### `/checkpoint`
+
+Creates a named checkpoint at the current session state.
+
+```text
+❯ /checkpoint
+Checkpoint created: 550e8400-e29b-41d4-a716-446655440000_20240115_103000
+```
+
+### `/restore <checkpoint_id>`
+
+Restores the session to a previous checkpoint.
+
+```text
+❯ /restore 550e8400-e29b-41d4-a716-446655440000_20240115_103000
+```
+
+## Configuration
+
+### `/config`
+
+Displays the current active configuration.
+
+```text
+❯ /config
+
+Current Configuration
+  Model: mistralai/devstral-2512:free
+  Temperature: 1.0
+  Approval: on-request
+  Working Dir: /path/to/project
+  Max Turns: 100
+  Hooks Enabled: false
+```
+
+### `/model <name>`
+
+Switches the LLM model at runtime without restarting.
+
+```text
+❯ /model anthropic/claude-3.5-sonnet
+Model changed to: anthropic/claude-3.5-sonnet
+```
+
+### `/approval <mode>`
+
+Changes the safety approval policy at runtime.
+
+```text
+❯ /approval auto
+Approval policy changed to: auto
+```
+
+Valid modes: `on-request`, `on-failure`, `auto`, `auto-edit`, `never`, `yolo`
+
+## Monitoring
+
+### `/stats`
+
+Displays session statistics including token usage and turn count.
+
+```text
+❯ /stats
+
+Session Statistics
+   session_id: 550e8400-e29b-41d4-a716-446655440000
+   created_at: 2024-01-15T10:00:00
+   turn_count: 12
+   message_count: 45
+   token_usage: 12500
+   tools_count: 13
+   mcp_servers: 1
+```
+
+### `/tools`
+
+Lists all available tools, including built-in, MCP, and custom tools.
+
+```text
+❯ /tools
+
+Available tools (13)
+  • read_file
+  • write_file
+  • edit
+  • shell
+  • list_dir
+  • grep
+  • glob
+  • web_search
+  • web_fetch
+  • todos
+  • memory
+  • subagent_codebase_investigator
+  • subagent_code_reviewer
+```
+
+### `/mcp`
+
+Shows the status of connected MCP servers.
+
+```text
+❯ /mcp
+
+MCP Servers (2)
+  • filesystem: connected (12 tools)
+  • database: connected (5 tools)
+```
+
+## Help
+
+### `/help`
+
+Displays the interactive help dashboard.
+
+```text
+❯ /help
+```
+
+Shows a formatted panel with all available commands and pro tips.

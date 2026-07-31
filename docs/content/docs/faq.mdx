@@ -1,0 +1,103 @@
+---
+title: FAQ
+description: Frequently asked questions about Flux-CLI.
+---
+
+# FAQ
+
+## General
+
+### What is Flux-CLI?
+
+Flux-CLI is an open-source AI coding agent that runs in your terminal. It helps developers write, refactor, and understand code through natural language conversations. It features multi-tool orchestration, streaming responses, sub-agent delegation, MCP integration, and safety approval policies.
+
+### Is Flux-CLI production-ready?
+
+Flux-CLI is a **learning initiative** designed to understand and implement core concepts behind intelligent coding agents. While it is functional and feature-rich, it is primarily an educational project. The code is MIT licensed and can be used in production, but you should review and test it for your specific needs.
+
+### How is Flux-CLI different from Claude Code CLI?
+
+Flux-CLI is:
+- **Open source** (MIT) — Claude Code CLI is closed-source
+- **Multi-provider** — Works with any OpenAI-compatible API, not just Claude
+- **Extensible** — Custom tools, MCP integration, and lifecycle hooks
+- **Educational** — The code is designed to be readable and learn from
+
+## Technical
+
+### What Python version do I need?
+
+Python 3.10 or higher is required.
+
+### Can I use Flux-CLI with local models?
+
+Yes! Flux-CLI works with any OpenAI-compatible API, including local models served by Ollama, vLLM, or LocalAI. Set the `BASE_URL` to your local endpoint.
+
+### Does Flux-CLI work on Windows?
+
+Yes, Flux-CLI works on Windows 10+ with full UTF-8 support. The TUI is configured to handle Windows-specific console requirements.
+
+### How does context compression work?
+
+When the conversation context exceeds 80% of the model's context window, Flux-CLI uses a child LLM call to summarize the conversation. The summary is structured to include:
+- Original goal
+- Completed actions (marked as DO NOT REPEAT)
+- Current state
+- Remaining tasks
+- Next step
+
+## Usage
+
+### How do I save my session?
+
+Use the `/save` slash command to save the current session. Sessions are stored in the OS user data directory and can be resumed with `/resume <session_id>`.
+
+### How do I add custom tools?
+
+Create a Python file in `.flux-cli/tools/` in your project directory. The file should contain a class that extends the `Tools` base class with a `name`, `schema`, and `execute` method. Flux-CLI automatically discovers and registers it.
+
+### Can I change the model at runtime?
+
+Yes! Use the `/model <name>` slash command to switch models without restarting.
+
+### What is the "yolo" approval policy?
+
+The "yolo" policy auto-approves all tool executions without interactive prompts. It is useful for testing and demo environments, but not recommended for production use.
+
+## Security
+
+### Is my API key safe?
+
+Flux-CLI uses the API key from your environment variables or `.env` file. It is never hardcoded in the source code. The key is sent directly to the LLM provider API and is not logged or stored.
+
+### Can Flux-CLI damage my system?
+
+Flux-CLI has multiple safety layers:
+- **Command blocking** — Hard-coded dangerous patterns are always rejected
+- **Approval policies** — Mutating operations require confirmation by default
+- **Path validation** — Operations outside the working directory are restricted
+- **Environment sanitization** — Sensitive environment variables are filtered
+
+### What happens if the agent tries to run a dangerous command?
+
+The command is blocked by the safety system before execution. The agent receives an error message and the user is notified.
+
+## Contributing
+
+### How can I contribute?
+
+See the [Contributing](/docs/contributing) page for guidelines. The project is open to contributions of all kinds — code, documentation, bug reports, and feature requests.
+
+### Is there a code of conduct?
+
+Yes, the project follows standard open-source community guidelines. Be respectful, inclusive, and constructive in all interactions.
+
+## License
+
+### What license does Flux-CLI use?
+
+Flux-CLI is licensed under the **MIT License**. See the [License](/docs/license) page for details.
+
+### Can I use Flux-CLI in commercial projects?
+
+Yes, the MIT License allows commercial use, modification, and distribution with attribution.

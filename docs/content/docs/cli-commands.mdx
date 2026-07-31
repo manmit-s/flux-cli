@@ -1,0 +1,113 @@
+---
+title: CLI Commands
+description: Complete reference for Flux-CLI command-line interface.
+---
+
+# CLI Commands
+
+Flux-CLI uses the **Click** framework for its command-line interface.
+
+## Entry Point
+
+The main entry point is `main.py`:
+
+```bash
+python main.py [OPTIONS] [PROMPT]
+```
+
+Or via the installed package:
+
+```bash
+flux [OPTIONS] [PROMPT]
+```
+
+## Arguments
+
+### PROMPT (optional)
+
+A single prompt to execute. If provided, Flux-CLI runs in single-command mode and exits after completion.
+
+```bash
+python main.py "List all Python files in the project"
+```
+
+## Options
+
+### `--cwd`, `-c`
+
+Set the current working directory for the agent session.
+
+```bash
+python main.py --cwd /path/to/project
+```
+
+This must be an existing directory. If not specified, the current working directory is used.
+
+## Special Commands
+
+### `flux config`
+
+Run the configuration wizard:
+
+```bash
+python main.py config
+```
+
+This launches an interactive setup wizard that guides you through:
+
+1. Entering your API key
+2. Setting the base URL
+3. Choosing a default model
+
+## Interactive Mode
+
+When no prompt argument is provided, Flux-CLI launches in **interactive mode**:
+
+```bash
+python main.py
+```
+
+In interactive mode, you type prompts at the `❯` prompt. The agent processes your request and responds with streamed text and tool calls.
+
+## Slash Commands in Interactive Mode
+
+Flux-CLI supports slash commands for managing your session:
+
+| Command | Description |
+|---|---|
+| `/help` | Show the interactive help dashboard |
+| `/exit` or `/quit` | Exit the CLI session |
+| `/clear` | Clear conversation history |
+| `/config` | Show current active configuration |
+| `/model <name>` | Switch LLM model at runtime |
+| `/approval <mode>` | Change safety approval policy |
+| `/stats` | View session token usage & turn metrics |
+| `/tools` | List all available tools |
+| `/mcp` | View MCP server connection status |
+| `/save` | Save current session state |
+| `/sessions` | List all saved sessions |
+| `/resume <id>` | Resume a previously saved session |
+| `/checkpoint` | Create a named checkpoint |
+| `/restore <id>` | Restore session from a checkpoint |
+
+## Exit Codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Success (or single prompt completed) |
+| `1` | Error (configuration error, missing API key, etc.) |
+
+## Error Handling
+
+When an error occurs:
+
+1. The error message is displayed in the terminal
+2. The `on_error` hook is triggered (if configured)
+3. The CLI exits with code 1
+
+<Callout type="tip" title="Common Use Cases">
+- `python main.py` — Start interactive session
+- `python main.py "refactor this file"` — Run a single prompt
+- `python main.py config` — Run configuration wizard
+- `python main.py -c /path/to/proj "analyze this codebase"` — Run in a specific directory
+</Callout>

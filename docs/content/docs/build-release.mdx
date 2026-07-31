@@ -1,0 +1,146 @@
+---
+title: Build & Release
+description: How to build and release Flux-CLI.
+---
+
+# Build & Release
+
+This page covers how to build and release Flux-CLI as a Python package.
+
+## Building the Package
+
+Flux-CLI uses `setuptools` for packaging. The build configuration is in `pyproject.toml`.
+
+### Build Configuration
+
+```toml
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flux-cli"
+version = "0.1.0"
+description = "A powerful agentic AI coding CLI built with Python and Rich TUI"
+requires-python = ">=3.10"
+
+[project.scripts]
+flux = "main:main"
+```
+
+### Build Commands
+
+```bash
+# Install build tools
+pip install build twine
+
+# Build the package
+python -m build
+
+# Check the build
+twine check dist/*
+```
+
+## Publishing to PyPI
+
+### Prerequisites
+
+1. Create a PyPI account at [pypi.org](https://pypi.org/)
+2. Generate an API token
+3. Configure credentials
+
+### Publish
+
+```bash
+# Upload to PyPI
+twine upload dist/*
+
+# Or use TestPyPI first
+twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
+
+## Versioning
+
+Flux-CLI follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** — Incompatible API changes
+- **MINOR** — New functionality (backward compatible)
+- **PATCH** — Bug fixes (backward compatible)
+
+## Release Process
+
+1. Update version in `pyproject.toml`
+2. Build the package: `python -m build`
+3. Test the build: `twine check dist/*`
+4. Publish to TestPyPI: `twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
+5. Test installation from TestPyPI
+6. Publish to PyPI: `twine upload dist/*`
+7. Create a GitHub release
+8. Tag the release: `git tag v0.1.0 && git push --tags`
+
+## GitHub Actions
+
+The project includes a GitHub Actions workflow for automatic deployment:
+
+```yaml
+name: Deploy Documentation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Build
+        run: |
+          python -m build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+```
+
+## Dependency Management
+
+Dependencies are managed in two files:
+
+### `requirements.txt`
+
+For end users — pinned versions:
+
+```txt
+click==8.4.2
+ddgs==9.14.4
+fastmcp==3.4.5
+httpx==0.28.1
+openai==2.51.0
+...
+```
+
+### `pyproject.toml`
+
+For packaging — minimum versions:
+
+```toml
+dependencies = [
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "click>=8.0",
+    "openai>=1.0",
+    ...
+]
+```
+
+<Callout type="info" title="Needs Verification">
+The exact release process and CI/CD configuration should be verified against the project maintainer's preferences and any existing automation.
+</Callout>
