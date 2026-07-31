@@ -26,11 +26,15 @@ class Agent:
 
         final_response: str | None = None
 
-        async for event in self._agentic_loop():
-            yield event
+        try:
+            async for event in self._agentic_loop():
+                yield event
 
-            if event.type == AgentEventType.TEXT_COMPLETE:
-                final_response = event.data.get("content")
+                if event.type == AgentEventType.TEXT_COMPLETE:
+                    final_response = event.data.get("content")
+        except Exception as e:
+            await self.session.hook_system.trigger_on_error(e)
+            raise
 
         await self.session.hook_system.trigger_after_agent(message, final_response)
         yield AgentEvent.agent_end(final_response)
@@ -71,9 +75,11 @@ class Agent:
                     if event.tool_call:
                         tool_calls.append(event.tool_call)
                 elif event.type == StreamEventType.ERROR:
-                    yield AgentEvent.agent_error(
-                        event.error or "Unknown error occurred.",
+                    err_msg = event.error or "Unknown error occurred."
+                    await self.session.hook_system.trigger_on_error(
+                        RuntimeError(err_msg)
                     )
+                    yield AgentEvent.agent_error(err_msg)
                 elif event.type == StreamEventType.MESSAGE_COMPLETE:
                     usage = event.usage
 
@@ -163,7 +169,9 @@ class Agent:
                 self.session.context_manager.add_usage(usage)
 
             self.session.context_manager.prune_tool_outputs()
-        yield AgentEvent.agent_error(f"Maximum turns ({max_turns}) reached")
+        max_turn_err = RuntimeError(f"Maximum turns ({max_turns}) reached")
+        await self.session.hook_system.trigger_on_error(max_turn_err)
+        yield AgentEvent.agent_error(str(max_turn_err))
 
     async def __aenter__(self) -> Agent:
         await self.session.initialize()
