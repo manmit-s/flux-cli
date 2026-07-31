@@ -2,6 +2,8 @@
 
 An AI coding agent built from scratch — inspired by Claude Code CLI and Gemini CLI — featuring full multi-tool orchestration, streaming responses, sub-agent delegation, MCP server integration, dynamic lifecycle hooks, safety approval policies, and a styled Rich terminal UI with gradient ASCII branding.
 
+[![flux-cli.png](https://i.postimg.cc/HWKhbWrT/flux-cli.png)](https://postimg.cc/rz1jkkGH)
+
 ```text
 ██╗    ███████╗██╗     ██╗   ██╗██╗  ██╗
 ╚██╗   ██╔════╝██║     ██║   ██║╚██╗██╔╝
@@ -183,10 +185,10 @@ pip install -r requirements.txt
 
 ```bash
 # Recommended for CLI tools:
-pipx install flux-cli-ai
+pipx install flux-cli
 
 # Or via standard pip:
-pip install flux-cli-ai
+pip install flux-cli
 
 # Launch directly from anywhere in your terminal:
 flux
