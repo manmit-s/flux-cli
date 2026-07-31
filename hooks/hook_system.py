@@ -1,12 +1,16 @@
 import asyncio
 import json
+import logging
 import os
+import shlex
 import signal
 import sys
 import tempfile
 from typing import Any
 from config.config import Config, HookConfig, HookTrigger
 from tools.base import ToolResult
+
+logger = logging.getLogger(__name__)
 
 
 class HookSystem:
@@ -20,20 +24,25 @@ class HookSystem:
         try:
             if hook.command:
                 await self._run_command(hook.command, hook.timeout_sec, env)
-            else:
-                with tempfile.NamedTemporaryFile(
-                    mode="w", suffix=".sh", delete=False
-                ) as f:
-                    f.write("#!/bin/bash\n")
-                    f.write(hook.script)
-                    script_path = f.name
-                try:
-                    os.chmod(script_path, 0o755)
-                    await self._run_command(script_path, hook.timeout_sec, env)
-                finally:
-                    os.unlink(script_path)
+            elif hook.script:
+                if sys.platform == "win32":
+                    cmd = f'bash -c {shlex.quote(hook.script)}'
+                    await self._run_command(cmd, hook.timeout_sec, env)
+                else:
+                    with tempfile.NamedTemporaryFile(
+                        mode="w", suffix=".sh", delete=False, newline="\n"
+                    ) as f:
+                        f.write("#!/bin/bash\n")
+                        f.write(hook.script)
+                        script_path = f.name
+                    try:
+                        os.chmod(script_path, 0o755)
+                        await self._run_command(f'"{script_path}"', hook.timeout_sec, env)
+                    finally:
+                        if os.path.exists(script_path):
+                            os.unlink(script_path)
         except Exception as e:
-            print(e)
+            logger.exception(f"Error executing hook '{hook.name}': {e}")
 
     async def _run_command(
         self,
@@ -51,12 +60,39 @@ class HookSystem:
         )
 
         try:
-            await asyncio.wait_for(process.communicate(), timeout=timeout)
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=timeout
+            )
+            stdout_str = stdout.decode(errors="replace").strip()
+            stderr_str = stderr.decode(errors="replace").strip()
+
+            if stdout_str:
+                logger.debug(f"Hook stdout: {stdout_str}")
+            if stderr_str:
+                logger.warning(f"Hook stderr: {stderr_str}")
+
+            if process.returncode != 0:
+                logger.warning(
+                    f"Hook command '{command}' failed with exit code {process.returncode}"
+                )
         except asyncio.TimeoutError:
+            logger.warning(
+                f"Hook command '{command}' timed out after {timeout} seconds"
+            )
             if sys.platform != "win32":
-                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                try:
+                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                except Exception:
+                    process.kill()
             else:
-                process.kill()
+                try:
+                    await asyncio.create_subprocess_shell(
+                        f"taskkill /F /T /PID {process.pid}",
+                        stdout=asyncio.subprocess.DEVNULL,
+                        stderr=asyncio.subprocess.DEVNULL,
+                    )
+                except Exception:
+                    process.kill()
             await process.wait()
 
     def _build_env(
@@ -67,16 +103,16 @@ class HookSystem:
         error: Exception | None = None,
     ) -> dict[str, str]:
         env = os.environ.copy()
-        env["AI_AGENT_TRIGGER"] = trigger.value
+        env["AI_AGENT_TRIGGER"] = str(trigger.value)
         env["AI_AGENT_CWD"] = str(self.config.cwd)
 
-        if tool_name:
-            env["AI_AGENT_TOOL_NAME"] = tool_name
+        if tool_name is not None:
+            env["AI_AGENT_TOOL_NAME"] = str(tool_name)
 
-        if user_message:
-            env["AI_AGENT_USER_MESSAGE"] = user_message
+        if user_message is not None:
+            env["AI_AGENT_USER_MESSAGE"] = str(user_message)
 
-        if error:
+        if error is not None:
             env["AI_AGENT_ERROR"] = str(error)
 
         return env
@@ -94,13 +130,13 @@ class HookSystem:
     async def trigger_after_agent(
         self,
         user_message: str,
-        agent_response: str,
+        agent_response: str | None = None,
     ) -> None:
         env = self._build_env(
             HookTrigger.AFTER_AGENT,
             user_message=user_message,
         )
-        env["AI_AGENT_RESPONSE"] = agent_response
+        env["AI_AGENT_RESPONSE"] = str(agent_response) if agent_response is not None else ""
 
         for hook in self.hooks:
             if hook.trigger == HookTrigger.AFTER_AGENT:
@@ -126,7 +162,7 @@ class HookSystem:
     ) -> None:
         env = self._build_env(HookTrigger.AFTER_TOOL, tool_name=tool_name)
         env["AI_AGENT_TOOL_PARAMS"] = json.dumps(tool_params)
-        env["AI_AGENT_TOOL_RESULT"] = tool_result.to_model_output()
+        env["AI_AGENT_TOOL_RESULT"] = str(tool_result.to_model_output())
 
         for hook in self.hooks:
             if hook.trigger == HookTrigger.AFTER_TOOL:
@@ -137,4 +173,4 @@ class HookSystem:
 
         for hook in self.hooks:
             if hook.trigger == HookTrigger.ON_ERROR:
-                await self._run_hook(hook, env)
+                await self._run_hook(hook, env)
