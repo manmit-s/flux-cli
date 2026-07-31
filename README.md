@@ -4,14 +4,14 @@ An AI coding agent built from scratch — inspired by Claude Code CLI and Gemini
 
 [![flux-cli.png](https://i.postimg.cc/HWKhbWrT/flux-cli.png)](https://postimg.cc/rz1jkkGH)
 
-```text
+<!-- ```text
 ██╗    ███████╗██╗     ██╗   ██╗██╗  ██╗
 ╚██╗   ██╔════╝██║     ██║   ██║╚██╗██╔╝
  ╚██╗  █████╗  ██║     ██║   ██║ ╚███╔╝ 
  ██╔╝  ██╔══╝  ██║     ██║   ██║ ██╔██╗ 
 ██╔╝   ██║     ███████╗╚██████╔╝██╔╝ ██╗
 ╚═╝    ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝
-```
+``` -->
 
 ---
 
