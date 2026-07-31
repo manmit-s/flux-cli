@@ -6,6 +6,11 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Build & Distribution artifacts
+build/
+dist/
+*.egg-info/
+
 # Temp runner / editor files
 *.temcoderunner
 tempCodeRunnerFile.py
@@ -23,8 +28,18 @@ tempCodeRunnerFile.py
 .DS_Store
 Thumbs.db
 
-#Temporarily ignored
-.github/
-
-# AI Code Bridge
+# Ignored AI bridge
 .agent/
+
+# Node modules
+docs/node_modules/
+docs/.next/
+docs/.cache
+docs/out/
+
+# Docs build caches
+docs/.source/
+docs/tsconfig.tsbuildinfo
+
+# For PYPI
+flux_cli

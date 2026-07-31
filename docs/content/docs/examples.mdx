@@ -1,0 +1,123 @@
+---
+title: Examples
+description: Real-world examples of using Flux-CLI.
+---
+
+# Examples
+
+This page provides practical examples of using Flux-CLI for common development tasks.
+
+## Example 1: Understanding a Codebase
+
+Ask Flux-CLI to explore and explain an unfamiliar codebase:
+
+<CodeExample
+  title="Explore codebase structure"
+  language="text"
+  code={`❯ Explore the project structure and explain how the authentication system works`}
+  description="Flux-CLI will use list_dir, read_file, and grep to map the codebase."
+/>
+
+**What happens:**
+1. Agent calls `list_dir` to see the top-level structure
+2. Agent calls `grep` to find authentication-related code
+3. Agent reads key files to understand the auth flow
+4. Agent provides a comprehensive explanation
+
+## Example 2: Refactoring Code
+
+Ask Flux-CLI to refactor a function:
+
+<CodeExample
+  title="Refactor a function"
+  language="text"
+  code={`❯ Refactor the get_config() function in config/loader.py to use a cache pattern`}
+  description="Flux-CLI will read the file, plan the refactor, and apply edits."
+/>
+
+**What happens:**
+1. Agent reads `config/loader.py` to understand the current implementation
+2. Agent plans the refactoring approach
+3. Agent uses `edit` to make surgical changes
+4. Agent verifies the changes are correct
+
+## Example 3: Debugging
+
+Ask Flux-CLI to help debug an issue:
+
+<CodeExample
+  title="Debug an error"
+  language="text"
+  code={`❯ The shell tool keeps timing out. Find the timeout configuration and explain why`}
+  description="Flux-CLI searches for timeout-related code and explains the root cause."
+/>
+
+## Example 4: Multi-Step Task
+
+Use the `todos` tool to track a complex task:
+
+<CodeExample
+  title="Multi-step task with todos"
+  language="text"
+  code={`❯ I need to:
+1. Add input validation to the WriteFileTool
+2. Write tests for it
+3. Update the documentation
+Use todos to track this`}
+  description="Flux-CLI creates todo items and works through them systematically."
+/>
+
+## Example 5: Web Research
+
+Ask Flux-CLI to research a topic:
+
+<CodeExample
+  title="Research and summarize"
+  language="text"
+  code={`❯ Search for the latest best practices for Python project structure in 2024`}
+  description="Flux-CLI uses web_search to find information and provides a summary."
+/>
+
+## Example 6: Using Sub-Agents
+
+For complex codebase analysis, use sub-agents:
+
+<CodeExample
+  title="Codebase investigation"
+  language="text"
+  code={`❯ Use the codebase investigator to understand how the hook system works`}
+  description="Flux-CLI delegates to a sub-agent with focused read-only tools."
+/>
+
+## Example 7: Working with MCP Tools
+
+If you have an MCP server connected:
+
+<CodeExample
+  title="Using MCP tools"
+  language="text"
+  code={`❯ Use the filesystem MCP server to list all files in the project`}
+  description="Flux-CLI uses the MCP-connected tool which may have additional capabilities."
+/>
+
+## Example 8: Session Persistence
+
+Save and resume a complex session:
+
+<CodeExample
+  title="Save and resume"
+  language="text"
+  code={`❯ /save
+# Later, in a new session:
+❯ /resume 550e8400-e29b-41d4-a716-446655440000
+# Continue from where you left off`}
+  description="Session persistence allows long-running investigations without losing context."
+/>
+
+## Best Practices
+
+1. **Be specific** — Clear, specific prompts yield better results
+2. **Use todos** — For multi-step tasks, let Flux-CLI track progress
+3. **Check stats** — Monitor token usage with `/stats` to stay within limits
+4. **Save frequently** — Use `/save` to preserve important sessions
+5. **Leverage sub-agents** — For deep investigations, delegate to focused sub-agents

@@ -1,0 +1,99 @@
+---
+title: Quick Start
+description: Get Flux-CLI running in under 5 minutes.
+---
+
+# Quick Start
+
+This guide will get you up and running with Flux-CLI in under 5 minutes.
+
+## Step 1: Set Up Your API Key
+
+Create a `.env` file in your workspace:
+
+<CodeExample
+  title=".env"
+  language="bash"
+  code={`API_KEY=your_api_key_here
+BASE_URL=https://openrouter.ai/api/v1`}
+  description="These environment variables are loaded automatically by Flux-CLI."
+/>
+
+<Callout type="info">
+You can get a free API key from [OpenRouter](https://openrouter.ai/). No credit card required for most models.
+</Callout>
+
+## Step 2: Launch Flux-CLI
+
+Navigate to your project directory and run:
+
+<CodeExample
+  title="Launch interactive mode"
+  language="bash"
+  code={`cd your-project
+python main.py`}
+  description="Starts the interactive REPL with the gradient ASCII banner."
+/>
+
+You should see the Flux-CLI banner:
+
+```
+██╗    ███████╗██╗     ██╗   ██╗██╗  ██╗
+╚██╗   ██╔════╝██║     ██║   ██║╚██╗██╔╝
+ ╚██╗  █████╗  ██║     ██║   ██║ ╚███╔╝
+ ██╔╝  ██╔══╝  ██║     ██║   ██║ ██╔██╗
+██╔╝   ██║     ███████╗╚██████╔╝██╔╝ ██╗
+╚═╝    ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝
+```
+
+## Step 3: Try Your First Command
+
+Once in the REPL, type a prompt:
+
+<CodeExample
+  title="Example interaction"
+  language="text"
+  code={`❯ What files are in the current directory?`}
+  description="Flux-CLI will process your request and use the list_dir tool to show files."
+/>
+
+You'll see Flux-CLI:
+
+1. Stream a response explaining what it's doing
+2. Call the `list_dir` tool to explore the directory
+3. Display results in a formatted panel
+
+## Step 4: Try Slash Commands
+
+Flux-CLI supports interactive slash commands:
+
+<CodeExample
+  title="Slash commands"
+  language="text"
+  code={`❯ /help    # Show help dashboard
+❯ /config  # Show current configuration
+❯ /stats   # Show session statistics
+❯ /tools   # List all available tools`}
+  description="Slash commands provide quick access to configuration and status information."
+/>
+
+## Step 5: Single-Command Mode
+
+You can also run Flux-CLI with a single prompt:
+
+<CodeExample
+  title="Single command mode"
+  language="bash"
+  code={`python main.py "List all Python files in the project"`}
+  description="Runs a single prompt and exits. Useful for automation and scripting."
+/>
+
+## What's Next?
+
+Now that you have Flux-CLI running:
+
+- Read about the [Architecture](/docs/architecture) to understand how it works
+- Explore the [Configuration](/docs/configuration) options
+- Learn about [CLI Commands](/docs/cli-commands) and slash commands
+- Check out the [Examples](/docs/examples) for real-world usage
+

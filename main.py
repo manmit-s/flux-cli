@@ -337,8 +337,11 @@ class CLI:
 async def run(messages: dict[str, Any]):
     pass
 
+from config.setup import run_config_wizard
+
+
 @click.command()
-@click.argument("prompt", required = False)
+@click.argument("prompt", required=False)
 @click.option(
     '--cwd',
     '-c',
@@ -348,9 +351,13 @@ async def run(messages: dict[str, Any]):
 def main(
         prompt: str | None,
         cwd: Path | None,
-):   
+):
+    if prompt and prompt.lower().strip() == "config":
+        run_config_wizard()
+        sys.exit(0)
+
     config = None
-    try: 
+    try:
         config = load_config(cwd=cwd)
     except Exception as e:
         console.print(f"[error]Configuration Error: {e}[/error]")
@@ -360,23 +367,59 @@ def main(
         console.print("[error]Failed to load configuration[/error]")
         sys.exit(1)
 
+    # Check if API key is missing or placeholder
+    if not config.api_key or config.api_key == "YOUR_API_KEY_HERE":
+        from rich.panel import Panel
+        from rich.prompt import Prompt
+        from rich.text import Text
+        from rich import box
+
+        console.print()
+        console.print(
+            Panel(
+                Text(
+                    "Welcome to Flux-CLI!\n\n"
+                    "No valid API key detected. Please configure your API key, base URL, and model.\n"
+                    "Documentation: https://manmit-s.github.io/flux-cli",
+                    style="bold #7fe4eb"
+                ),
+                title="✦ Flux-CLI Onboarding",
+                border_style="#374151",
+                box=box.ROUNDED,
+                padding=(1, 2)
+            )
+        )
+
+        choice = Prompt.ask("\nWould you like to run the configuration wizard now?", choices=["y", "n"], default="y")
+        if choice.lower() in ("y", "yes"):
+            if run_config_wizard():
+                try:
+                    config = load_config(cwd=cwd)
+                except Exception as e:
+                    console.print(f"[error]Error reloading configuration: {e}[/error]")
+                    sys.exit(1)
+            else:
+                sys.exit(1)
+        else:
+            console.print("\n[dim]You can run configuration anytime using:[/] [bold #a191f8]flux config[/]")
+            sys.exit(0)
+
     errors = config.validate()
 
     if errors:
         for error in errors:
             console.print(f"[error]{error}[/error]")
-
         sys.exit(1)
 
-    cli = CLI(config)  
-    
+    cli = CLI(config)
+
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
         if result is None:
             sys.exit(1)
     else:
         asyncio.run(cli.run_interactive())
-             
+
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,86 @@
+---
+title: Installation
+description: Install Flux-CLI on your system.
+---
+
+# Installation
+
+Flux-CLI can be installed in several ways depending on your needs.
+
+## Prerequisites
+
+- **Python 3.10+** — Required for running Flux-CLI
+- **An API key** — From OpenRouter (default) or any OpenAI-compatible provider
+
+## Option 1: Local Development (Recommended)
+
+Clone the repository and install dependencies:
+
+<CodeExample
+  title="Clone & Install"
+  language="bash"
+  code={`git clone https://github.com/manmit-s/flux-cli.git
+cd flux-cli
+
+# Create and activate virtual environment
+python -m venv .venv
+
+# On Windows:
+.venv\\Scripts\\activate
+# On macOS/Linux:
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt`}
+  description="Creates an isolated Python environment and installs all dependencies."
+/>
+
+## Option 2: Via Pip (When Published)
+
+<CodeExample
+  title="Install via pip"
+  language="bash"
+  code={`# Install globally
+pip install flux-cli
+
+# Or install in a virtual environment
+python -m venv .venv
+source .venv/bin/activate
+pip install flux-cli`}
+  description="Standard pip installation when the package is published to PyPI."
+/>
+
+## Option 3: Via Pipx (Recommended for CLI Tools)
+
+<CodeExample
+  title="Install via pipx"
+  language="bash"
+  code={`# Install pipx if you don't have it
+python -m pip install --user pipx
+python -m pipx ensurepath
+
+# Install flux-cli
+pipx install flux-cli
+
+# Launch from anywhere
+flux`}
+  description="Pipx creates isolated environments for CLI tools and adds them to your PATH."
+/>
+
+## Verify Installation
+
+<CodeExample
+  title="Verify installation"
+  language="bash"
+  code={`# Check that the CLI is installed
+flux --help
+
+# Or run directly from the repository
+python main.py --help`}
+  description="If installed correctly, you should see the help menu with available commands."
+/>
+
+<Callout type="tip" title="Virtual Environment Best Practice">
+Always use a virtual environment for Python projects. It prevents dependency conflicts and keeps your system Python clean. Flux-CLI uses the `.venv` directory (gitignored by default).
+</Callout>
+

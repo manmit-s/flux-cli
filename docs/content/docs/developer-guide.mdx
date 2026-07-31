@@ -1,0 +1,192 @@
+---
+title: Developer Guide
+description: Guide for developers extending Flux-CLI.
+---
+
+# Developer Guide
+
+This guide covers how to extend Flux-CLI with custom tools, hooks, and integrations.
+
+## Creating Custom Tools
+
+Custom tools are the easiest way to extend Flux-CLI. Simply create a Python file in `.flux-cli/tools/` in your project directory.
+
+### Basic Tool Structure
+
+<CodeExample
+  title="Custom Tool Template"
+  language="python"
+  code={`# .flux-cli/tools/my_tool.py
+from pydantic import BaseModel, Field
+from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
+
+class MyToolParams(BaseModel):
+    message: str = Field(..., description="The message to echo")
+
+class MyTool(Tools):
+    name = "my_tool"
+    description = "An example custom tool that echoes a message"
+    kind = ToolKind.READ
+    schema = MyToolParams
+
+    async def execute(self, invocation: ToolInvocation) -> ToolResult:
+        params = MyToolParams(**invocation.params)
+        return ToolResult.success_result(
+            f"Echo: {params.message}",
+            metadata={"echoed": True},
+        )
+`}
+  description="A minimal custom tool that echoes a message."
+/>
+
+### Tool Registration
+
+Tools are automatically discovered from the `.flux-cli/tools/` directory. The discovery process:
+
+1. Scans the project's `.flux-cli/tools/` directory for `.py` files
+2. Also scans the system config directory's `.flux-cli/tools/`
+3. Loads each module and finds classes that extend `Tools`
+4. Instantiates and registers each tool
+
+### Tool Kinds
+
+Choose the appropriate `ToolKind` for your tool:
+
+```python
+class ToolKind(str, Enum):
+    READ = "read"       # Read-only operations
+    WRITE = "write"      # Modifies files
+    SHELL = "shell"      # Executes commands
+    NETWORK = "network"  # Network operations
+    MEMORY = "memory"    # Memory/task operations
+    MCP = "mcp"          # External MCP tools
+```
+
+## Configuring Lifecycle Hooks
+
+Hooks allow you to execute shell commands at specific points in the agent lifecycle.
+
+### Hook Configuration
+
+```toml
+hooks_enabled = true
+
+[[hooks]]
+name = "notify-start"
+trigger = "before_agent"
+command = "echo 'Agent started working on: $AI_AGENT_USER_MESSAGE'"
+
+[[hooks]]
+name = "log-errors"
+trigger = "on_error"
+command = "echo 'Agent error: $AI_AGENT_ERROR' >> agent-errors.log"
+```
+
+### Available Environment Variables
+
+| Variable | Description |
+|---|---|
+| `AI_AGENT_TRIGGER` | The hook trigger name |
+| `AI_AGENT_CWD` | Current working directory |
+| `AI_AGENT_USER_MESSAGE` | User's message |
+| `AI_AGENT_RESPONSE` | Agent's response |
+| `AI_AGENT_TOOL_NAME` | Tool being executed |
+| `AI_AGENT_TOOL_PARAMS` | JSON tool parameters |
+| `AI_AGENT_TOOL_RESULT` | Tool execution result |
+| `AI_AGENT_ERROR` | Error message |
+
+## Creating Sub-Agents
+
+Sub-agents are specialized agents with isolated context and restricted tool access.
+
+### Sub-Agent Definition
+
+<CodeExample
+  title="Custom Sub-Agent"
+  language="python"
+  code={`from tools.subagent import SubAgentDefinition
+
+MY_SUB_AGENT = SubAgentDefinition(
+    name="my_specialist",
+    description="A specialist sub-agent for a specific task",
+    goal_prompt="""You are a specialist in a specific domain.
+Complete the assigned task using the available tools.
+Do NOT modify any files unless explicitly required.""",
+    allowed_tools=["read_file", "grep", "glob", "list_dir"],
+    max_turns=20,
+    timeout_seconds=600,
+)
+`}
+  description="Define a custom sub-agent with specific tools and constraints."
+/>
+
+### Registering Sub-Agents
+
+Sub-agents are registered in the `get_default_subagent_definitions()` function in `tools/subagent.py`. You can add your custom definitions there.
+
+## Connecting MCP Servers
+
+MCP (Model Context Protocol) servers provide external tools to Flux-CLI.
+
+### Example: Filesystem Server
+
+```toml
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem"]
+enabled = true
+```
+
+### Example: Custom MCP Server
+
+```toml
+[mcp_servers.my-server]
+command = "python"
+args = ["-m", "my_mcp_server"]
+env = { MY_CONFIG = "value" }
+cwd = "/path/to/server"
+enabled = true
+```
+
+## Development Best Practices
+
+### Code Style
+
+- Follow PEP 8 guidelines
+- Use type hints for all function signatures
+- Write docstrings for all public methods
+- Keep functions focused and small
+
+### Testing
+
+```bash
+# Run the test tool
+python scripts/test_tool.py
+
+# Test your custom tool
+python -c "from .flux-cli.tools.my_tool import MyTool; print(MyTool.schema.schema())"
+```
+
+### Debugging
+
+Enable debug mode in the configuration:
+
+```toml
+debug = true
+```
+
+This enables verbose logging from the hook system and tool registry.
+
+## Architecture Guide
+
+Before extending Flux-CLI, understand the core architecture:
+
+1. **Agent Engine** (`agent/agent.py`) — The orchestrator that manages the agentic loop
+2. **Tool Registry** (`tools/registry.py`) — Manages tool registration and invocation
+3. **Context Manager** (`context/manager.py`) — Manages conversation history
+4. **LLM Client** (`client/llm_client.py`) — Handles API communication
+5. **Hook System** (`hooks/hook_system.py`) — Lifecycle event triggers
+
+<Callout type="info">
+The codebase is designed to be educational. Read the source files to understand the implementation details before making significant changes.
+</Callout>

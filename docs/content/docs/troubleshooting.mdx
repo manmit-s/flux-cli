@@ -1,0 +1,167 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Flux-CLI.
+---
+
+# Troubleshooting
+
+This page covers common issues you might encounter while using Flux-CLI and how to resolve them.
+
+## Configuration Issues
+
+### "No API key found"
+
+**Error:**
+```
+Configuration Error: No API key found. Set API_KEY environment variable
+```
+
+**Solutions:**
+1. Create a `.env` file with `API_KEY=your-key`
+2. Run `python main.py config` to use the setup wizard
+3. Set the environment variable: `export API_KEY=your-key` (Linux/macOS) or `set API_KEY=your-key` (Windows)
+
+### "Invalid TOML in config file"
+
+**Error:**
+```
+Configuration Error: Invalid TOML in {path}: {details}
+```
+
+**Solutions:**
+1. Check the syntax of your TOML file
+2. Use a TOML validator: `pip install toml-sort && toml-sort -c config.toml`
+3. Ensure all strings are properly quoted
+
+## Connection Issues
+
+### "Rate Limit Exceeded"
+
+**Error:**
+```
+Rate Limit Exceeded: {details}
+```
+
+**Solutions:**
+1. Wait and retry — the agent uses exponential backoff
+2. Check your provider's rate limits
+3. Consider upgrading your API plan
+4. Use a less popular model to avoid rate limits
+
+### "Connection Error"
+
+**Error:**
+```
+Connection Error: {details}
+```
+
+**Solutions:**
+1. Check your internet connection
+2. Verify the `BASE_URL` is correct
+3. Ensure the API endpoint is accessible
+4. Check firewall/proxy settings
+
+## Tool Issues
+
+### "Command blocked for safety"
+
+**Error:**
+```
+Command blocked for safety: {command}
+```
+
+**Solutions:**
+1. This is a safety feature — the command matched a dangerous pattern
+2. If you need to run this command, use the `yolo` approval policy
+3. Consider using a safer alternative command
+
+### "File not found"
+
+**Error:**
+```
+File not found: {path}
+```
+
+**Solutions:**
+1. Check that the file path is correct
+2. Use `list_dir` to explore the directory structure
+3. Use absolute paths or paths relative to the working directory
+
+### "Path is outside working directory"
+
+**Error:**
+```
+Path is outside working directory: {path}
+```
+
+**Solutions:**
+1. This is a safety feature — the agent is restricted to the working directory
+2. Change the working directory with `--cwd` flag
+3. Explicitly approve the operation if it's safe
+
+## Performance Issues
+
+### "Maximum turns reached"
+
+**Error:**
+```
+Maximum turns (100) reached
+```
+
+**Solutions:**
+1. Increase `max_turns` in the configuration
+2. Break complex tasks into smaller steps
+3. Use more specific prompts to reduce iterations
+4. Check if the agent is stuck in a loop
+
+### "Command timed out"
+
+**Error:**
+```
+Command timed out after {timeout}s
+```
+
+**Solutions:**
+1. Increase the `timeout` parameter for the shell command
+2. Check if the command is hanging indefinitely
+3. Use more efficient commands
+
+## Common Mistakes
+
+### "I forgot to activate the virtual environment"
+
+Always activate your virtual environment before running Flux-CLI:
+
+```bash
+# Windows
+.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
+```
+
+### "I committed my API key"
+
+Add `.env` to your `.gitignore` (it's already included by default):
+
+```text
+# .gitignore
+.env
+```
+
+### "The agent is not using the right model"
+
+Check the current model with `/config` and switch with `/model <name>`:
+
+```text
+❯ /config
+❯ /model anthropic/claude-3.5-sonnet
+```
+
+## Getting Help
+
+If you encounter issues not covered here:
+
+1. Check the [FAQ](/docs/faq) for common questions
+2. Open an issue on [GitHub](https://github.com/manmit-s/flux-cli/issues)
+3. Read the source code — it's designed to be educational

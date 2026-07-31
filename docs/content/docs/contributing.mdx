@@ -1,0 +1,128 @@
+---
+title: Contributing
+description: How to contribute to Flux-CLI.
+---
+
+# Contributing
+
+Thank you for your interest in contributing to Flux-CLI! This project is a learning initiative, and contributions of all kinds are welcome.
+
+## Code of Conduct
+
+- Be respectful and inclusive
+- Focus on constructive feedback
+- Help others learn
+- Assume good intentions
+
+## How to Contribute
+
+### Reporting Bugs
+
+1. Check the [issues](https://github.com/manmit-s/flux-cli/issues) to see if it's already reported
+2. Create a new issue with a clear description
+3. Include steps to reproduce, expected behavior, and actual behavior
+4. Include your environment details (OS, Python version, etc.)
+
+### Suggesting Features
+
+1. Open an issue describing the feature
+2. Explain why it would be useful
+3. If possible, suggest how it could be implemented
+
+### Code Contributions
+
+#### Setup
+
+```bash
+# Fork the repository
+git clone https://github.com/your-username/flux-cli.git
+cd flux-cli
+
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+#### Development Workflow
+
+1. Create a branch: `git checkout -b feature/my-feature`
+2. Make your changes
+3. Test your changes
+4. Commit with a clear message
+5. Push to your fork
+6. Open a pull request
+
+#### Code Style
+
+- Follow PEP 8 guidelines
+- Use type hints
+- Write docstrings for public methods
+- Keep functions focused and small
+- Comment complex logic
+
+#### Testing
+
+Test your changes thoroughly:
+
+```bash
+# Run the application
+python main.py
+
+# Test specific functionality
+python main.py "test prompt"
+
+# Run the test tool
+python scripts/test_tool.py
+```
+
+### Documentation Contributions
+
+Documentation is crucial for this educational project. You can contribute:
+
+- Fixing typos and errors
+- Adding examples
+- Improving explanations
+- Translating to other languages
+
+## Pull Request Process
+
+1. Ensure your code follows the project's style
+2. Update documentation if needed
+3. Make sure the application runs without errors
+4. Describe your changes in the PR description
+5. Reference any related issues
+
+## Project Structure
+
+Understanding the project structure helps with contributions:
+
+```
+flux/
+├── main.py              # CLI entry point
+├── agent/               # Agent orchestration
+├── client/              # LLM API client
+├── config/              # Configuration
+├── context/             # Context management
+├── hooks/               # Lifecycle hooks
+├── prompts/             # System prompts
+├── safety/              # Safety & approval
+├── tools/               # Tool system
+├── ui/                  # Terminal UI
+└── utils/               # Utilities
+```
+
+## Getting Help
+
+If you need help with contributions:
+
+- Open a discussion on GitHub
+- Read the [Developer Guide](/docs/developer-guide)
+- Explore the [Architecture](/docs/architecture) documentation
+- Read the source code — it's designed to be educational
+
+<Callout type="tip">
+This project was created as a learning initiative. Don't hesitate to ask questions or suggest improvements — that's how we all learn!
+</Callout>

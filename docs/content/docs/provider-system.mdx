@@ -1,0 +1,105 @@
+---
+title: Provider System
+description: How Flux-CLI supports multiple LLM providers.
+---
+
+# Provider System
+
+Flux-CLI is designed to work with any **OpenAI-compatible** API provider. This provides maximum flexibility in choosing and switching between different LLM models.
+
+## Supported Providers
+
+| Provider | Base URL | Key Features |
+|---|---|---|
+| **OpenRouter** | `https://openrouter.ai/api/v1` | 200+ models, free tier, no CC required |
+| **OpenAI** | `https://api.openai.com/v1` | GPT-4, GPT-4o, GPT-3.5 |
+| **Anthropic (via OpenRouter)** | `https://openrouter.ai/api/v1` | Claude models through OpenRouter |
+| **Local (Ollama)** | `http://localhost:11434/v1` | Self-hosted models, no API key needed |
+| **Local (vLLM)** | `http://localhost:8000/v1` | High-performance local inference |
+| **Any OpenAI-compatible** | Custom URL | Any provider implementing the OpenAI API |
+
+## How Provider Switching Works
+
+The provider is determined by two environment variables:
+
+```python
+# From config/config.py
+@property
+def api_key(self) -> str | None:
+    return os.environ.get("API_KEY")
+
+@property
+def base_url(self) -> str | None:
+    return os.environ.get("BASE_URL")
+```
+
+### Runtime Model Switching
+
+You can switch models at runtime without restarting:
+
+```text
+❯ /model anthropic/claude-3.5-sonnet
+Model changed to: anthropic/claude-3.5-sonnet
+```
+
+This changes the `model_name` property, which is used in the next API call.
+
+## OpenAI Compatibility Requirements
+
+For a provider to work with Flux-CLI, it must support:
+
+1. **Chat Completions API** — `POST /v1/chat/completions`
+2. **Function/Tool Calling** — The API must support the `tools` parameter
+3. **Streaming** (recommended) — The API must support `stream: true` for real-time responses
+
+## Default Configuration
+
+The default provider is OpenRouter with:
+
+```python
+# Default model
+model_name = "mistralai/devstral-2512:free"
+
+# Default base URL (OpenRouter)
+base_url = "https://openrouter.ai/api/v1"
+```
+
+## API Key Resolution
+
+The API key is resolved in this order:
+
+1. **Environment variable** — `API_KEY` from the environment
+2. **Config file** — `api_key` from the TOML config
+3. **.env file** — Loaded via `python-dotenv`
+
+## Retry Strategy
+
+The LLM client implements a provider-agnostic retry strategy:
+
+```python
+for attempt in range(self._max_retries + 1):
+    try:
+        async for event in self._stream_response(client, kwargs):
+            yield event
+        return
+    except RateLimitError:
+        # Exponential backoff: 2^attempt seconds
+        await asyncio.sleep(2 ** attempt)
+    except APIConnectionError:
+        await asyncio.sleep(2 ** attempt)
+    except APIError:
+        # Fail immediately for other API errors
+        yield StreamEvent(ERROR, error=str(e))
+        return
+```
+
+<Callout type="warning" title="OpenRouter Limitations">
+OpenRouter imposes a 4000 `max_tokens` limit on streaming responses. Flux-CLI complies with this by default. If using a different provider, you can modify this limit in `client/llm_client.py`.
+</Callout>
+
+## Best Practices
+
+1. **Use OpenRouter for development** — Free tier and wide model selection
+2. **Use local models for sensitive code** — No data leaves your machine
+3. **Switch models at runtime** — Use `/model` to experiment with different models
+4. **Monitor token usage** — Different providers have different pricing

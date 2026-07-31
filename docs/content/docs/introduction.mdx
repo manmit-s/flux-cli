@@ -1,0 +1,61 @@
+---
+title: Introduction
+description: Get an overview of Flux-CLI — an AI-powered coding agent that runs in your terminal.
+---
+
+# Introduction
+
+**Flux-CLI** is a powerful, open-source AI coding agent that runs directly in your terminal. Inspired by tools like Claude Code CLI and Gemini CLI, it is built from scratch in Python to help developers write, refactor, and understand code through natural language conversations.
+
+## What is Flux-CLI?
+
+Flux-CLI is not just a wrapper around an LLM API — it is a complete, event-driven agentic system that:
+
+- **Reasons** about problems and selects appropriate tools
+- **Orchestrates** multiple tools in sequence to accomplish complex tasks
+- **Streams** responses in real-time for a responsive feel
+- **Extends** through plugins, MCP servers, and lifecycle hooks
+- **Stays safe** with configurable approval policies for mutating operations
+
+## Why "Flux"?
+
+The name "Flux" reflects the project's core philosophy: constant flow and adaptation. Just as flux in physics represents the rate of flow through a surface, Flux-CLI enables a continuous flow of AI-assisted work — reasoning, acting, learning, and adapting through each interaction.
+
+<Callout type="tip" title="Learning-First Project">
+This project was created as a **learning initiative** to deeply understand how AI coding agents work under the hood — from reasoning loops and tool orchestration to streaming architectures and safety systems.
+</Callout>
+
+## What You Can Do with Flux-CLI
+
+| Capability | Description |
+|---|---|
+| **Code Understanding** | Read, search, and explore codebases of any size |
+| **File Operations** | Create, edit, and write files with surgical precision |
+| **Shell Commands** | Execute terminal commands safely with timeout controls |
+| **Web Research** | Search the web and fetch content for up-to-date information |
+| **Task Management** | Track multi-step tasks with session-scoped todo lists |
+| **Persistent Memory** | Remember user preferences across sessions |
+| **Sub-Agent Delegation** | Spawn specialized agents for code review and investigation |
+| **MCP Integration** | Connect external servers via the Model Context Protocol |
+
+## Architecture at a Glance
+
+The system follows an event-driven, layered architecture:
+
+```
+CLI Entry Point (main.py)
+      │
+      ▼
+Agent Engine (agent/agent.py) ◄── Hook System
+      │
+      ├──► Context Engine (compaction & pruning)
+      ├──► Tool Registry (built-in + MCP + custom)
+      └──► LLM Client (AsyncOpenAI wrapper)
+```
+
+Each component is designed to be modular, testable, and independently configurable.
+
+<Callout type="info">
+Ready to dive in? Check out the [Quick Start](/docs/quick-start) guide to get Flux-CLI running in minutes.
+</Callout>
+

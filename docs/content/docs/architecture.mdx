@@ -1,0 +1,187 @@
+---
+title: Architecture
+description: Deep dive into Flux-CLI's system architecture.
+---
+
+# Architecture
+
+Flux-CLI is built using an **event-driven, multi-tiered architecture** that orchestrates LLM interactions, tool executions, background hook triggers, safety approval policies, and interactive terminal UI rendering.
+
+## High-Level Architecture
+
+```mermaid
+graph TB
+    CLI[CLI Entry Point<br/>main.py] --> AGENT[Agent Engine<br/>agent/agent.py]
+    AGENT --> HOOK[Hook System<br/>hooks/hook_system.py]
+    AGENT --> CONTEXT[Context Engine<br/>context/manager.py]
+    AGENT --> TOOLS[Tool Registry<br/>tools/registry.py]
+    AGENT --> LLM[LLM Client<br/>client/llm_client.py]
+    
+    TOOLS --> BUILTIN[Built-in Tools<br/>tools/builtin/]
+    TOOLS --> MCP[MCP Tools<br/>tools/mcp/]
+    TOOLS --> SUBAGENT[Sub-Agents<br/>tools/subagent.py]
+    TOOLS --> DISCOVERY[Custom Discovery<br/>tools/discovery.py]
+    
+    CONTEXT --> COMPACT[Chat Compactor<br/>context/compaction.py]
+    CONTEXT --> LOOP[Loop Detector<br/>context/loop_detector.py]
+    
+    LLM --> API[LLM Provider API<br/>OpenAI-compatible]
+    
+    HOOK --> SHELL[Shell Commands<br/>Hooks]
+    
+    subgraph "Safety Layer"
+        SAFETY[Approval Manager<br/>safety/approval.py]
+        TOOLS --> SAFETY
+    end
+    
+    subgraph "UI Layer"
+        TUI[Terminal UI<br/>ui/tui.py]
+        CLI --> TUI
+    end
+    
+    style AGENT fill:#a191f8,stroke:#8bcefc,color:#fff
+    style CLI fill:#e7aafb,stroke:#8bcefc,color:#fff
+    style LLM fill:#8bcefc,stroke:#7fe4eb,color:#fff
+    style TOOLS fill:#7fe4eb,stroke:#8bcefc,color:#fff
+```
+
+## Component Overview
+
+### 1. CLI Entry Point (`main.py`)
+
+The CLI layer handles user interaction, command parsing, and session lifecycle. It uses the **Click** framework for argument parsing and the **Rich** library for the terminal UI.
+
+**Key responsibilities:**
+- Parsing command-line arguments
+- Loading configuration
+- Initializing the agent session
+- Running the interactive REPL or single-command mode
+- Handling slash commands
+
+### 2. Agent Engine (`agent/agent.py`)
+
+The core orchestrator that manages the multi-turn agentic loop. It is implemented as an **asynchronous generator** that yields events at every stage.
+
+**Key responsibilities:**
+- Processing user messages through the agentic loop
+- Managing context compression
+- Coordinating tool calls with the Tool Registry
+- Streaming events to the UI layer
+- Triggering lifecycle hooks
+
+### 3. LLM Client (`client/llm_client.py`)
+
+A wrapper around the **AsyncOpenAI** client that handles streaming, retries, and tool call parsing.
+
+**Key design decisions:**
+- **Lazy initialization** — The OpenAI client is created on first use, not at startup
+- **Exponential backoff** — Retries on RateLimitError and APIConnectionError with 2^attempt delay
+- **Streaming by default** — Supports both streaming and non-streaming modes
+- **Tool call streaming** — Yields incremental events for tool call name, arguments, and completion
+
+### 4. Tool Registry (`tools/registry.py`)
+
+A central registry that manages all available tools, including built-in, MCP, custom, and sub-agent tools.
+
+**Key design decisions:**
+- **Two-tier lookup** — Built-in tools in `_tools` dict, MCP tools in `_mcp_tools` dict
+- **Allowed tools filtering** — If `allowed_tools` is configured, only those tools are exposed
+- **Validation pipeline** — Parameters are validated against Pydantic schemas before execution
+- **Approval integration** — Mutating operations are checked against the approval policy
+
+### 5. Safety & Approval (`safety/approval.py`)
+
+A multi-layered safety system that protects against dangerous operations.
+
+**Key design decisions:**
+- **Pattern-based detection** — Dangerous commands are identified by regex patterns
+- **Safe command whitelist** — Read-only commands are auto-approved
+- **Path validation** — Operations outside the working directory require explicit approval
+- **Policy enum** — 6 policies provide granular control over safety vs. convenience
+
+## Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI as CLI (main.py)
+    participant Agent as Agent Engine<br/>agent.py
+    participant LLM as LLM Client<br/>llm_client.py
+    participant Registry as Tool Registry<br/>registry.py
+    participant Tool as Tool<br/>execute()
+    
+    User->>CLI: Types prompt
+    CLI->>Agent: run(message)
+    Agent->>Agent: yield AGENT_START
+    Agent->>Agent: Add user message to context
+    
+    loop For each turn (max_turns)
+        Agent->>Agent: Check context compression
+        Agent->>Registry: get_schemas()
+        Registry-->>Agent: Tool schemas
+        Agent->>LLM: chat_completion(messages, tools)
+        
+        loop For each stream event
+            LLM-->>Agent: TEXT_DELTA
+            Agent-->>CLI: yield TEXT_DELTA
+            LLM-->>Agent: TOOL_CALL_START/DELTA/COMPLETE
+        end
+        
+        LLM-->>Agent: MESSAGE_COMPLETE (usage)
+        
+        alt Tool calls received
+            loop For each tool call
+                Agent->>Agent: Check approval policy
+                Agent->>Registry: invoke(name, params)
+                Registry->>Tool: execute()
+                Tool-->>Registry: ToolResult
+                Registry-->>Agent: ToolResult
+                Agent-->>CLI: yield TOOL_CALL_COMPLETE
+            end
+            Agent->>Agent: Add tool results to context
+            Agent->>Agent: Check loop detection
+        else No tool calls
+            Agent->>Agent: Finalize response
+            Agent-->>CLI: yield TEXT_COMPLETE
+            Agent-->>CLI: yield AGENT_END
+        end
+    end
+    
+    CLI->>CLI: Render response via TUI
+    CLI-->>User: Display results
+```
+
+## Event System
+
+The entire agent lifecycle is driven by events. The `AgentEvent` class encapsulates all event types:
+
+```python
+class AgentEventType(Enum):
+    AGENT_START      = "agent_start"      # Agent starting processing
+    AGENT_END        = "agent_end"        # Agent finished processing
+    AGENT_ERROR      = "agent_error"      # Error occurred
+    TEXT_DELTA       = "text_delta"       # Streamed response chunk
+    TEXT_COMPLETE    = "text_complete"    # Full response complete
+    TOOL_CALL_START  = "tool_call_start"  # Tool invocation beginning
+    TOOL_CALL_COMPLETE = "tool_call_complete"  # Tool execution finished
+```
+
+## Configuration Pipeline
+
+```mermaid
+flowchart LR
+    A[System Config<br/>~/.config/flux-cli/config.toml] --> C[Merge Configs]
+    B[Project Config<br/>.flux-cli/config.toml] --> C
+    C --> D[Construct Pydantic Config]
+    E[AGENT.md Files] --> D
+    D --> F[Validated Config]
+    F --> G[Agent Session]
+```
+
+## Key Design Decisions
+
+1. **Async everywhere** — The entire system is asynchronous, from the agent loop to tool execution and hook triggers
+2. **Event-driven architecture** — Every component communicates through events, making the system modular and testable
+3. **Lazy initialization** — Expensive resources (LLM client, MCP connections) are created on first use
+4. **Multi-level config** — System, project, and CLI-level configs are merged with later ones overriding
+5. **Safety by default** — The approval policy defaults to `on-request`, requiring user confirmation for mutating operations

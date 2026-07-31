@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flux-cli-ai"
+version = "0.1.0"
+description = "A powerful agentic AI coding CLI built with Python and Rich TUI"
+readme = "README.md"
+authors = [{ name = "Manmit", email = "work.manmit.samal@zohomail.in" }]
+license = { text = "MIT" }
+
+
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "click>=8.0",
+    "openai>=1.0",
+    "platformdirs>=3.0",
+    "tomli>=2.0; python_version < '3.11'",
+    "python-dotenv>=1.0",
+    "tiktoken>=0.5.0",
+    "httpx>=0.24.0",
+    "duckduckgo-search>=4.0.0",
+    "fastmcp>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/manmit-s/flux-cli"
+Repository = "https://github.com/manmit-s"
+
+[project.scripts]
+flux = "flux_cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["flux_cli*"]

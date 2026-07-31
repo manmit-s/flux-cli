@@ -1,0 +1,277 @@
+@import "tailwindcss";
+@import "fumadocs-ui/style.css";
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+@config "../tailwind.config.ts";
+
+@layer base {
+  :root {
+    --background: #0a0a0f;
+    --foreground: #e2e8f0;
+    --muted: #6b7280;
+    --border: #1e1e2e;
+    --accent: #8bcefc;
+    --accent-hover: #a191f8;
+    --card: #111118;
+    --card-hover: #16161e;
+    --radius: 0.75rem;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2e2e3a transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #2e2e3a;
+    border-radius: 3px;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  ::selection {
+    background-color: rgba(138, 180, 248, 0.3);
+    color: #ffffff;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-surface/50 backdrop-blur-xl border border-surface-300/50 rounded-xl;
+  }
+
+  .glass-card {
+    @apply bg-surface/30 backdrop-blur-lg border border-surface-300/30 rounded-xl hover:border-flux-blue/30 transition-all duration-300;
+  }
+
+  .gradient-border {
+    position: relative;
+    border-radius: 0.75rem;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #e7aafb, #a191f8, #8bcefc, #7fe4eb);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .hero-glow {
+    position: relative;
+  }
+
+  .hero-glow::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -25%;
+    width: 150%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, rgba(138, 180, 248, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .code-highlight {
+    @apply bg-surface-200 rounded-lg border border-surface-300/50;
+  }
+
+  .nav-link {
+    color: var(--muted);
+    @apply transition-colors duration-200 px-3 py-2 rounded-lg text-sm font-medium;
+  }
+  .nav-link:hover {
+    color: var(--foreground);
+  }
+
+  .nav-link-active {
+    @apply bg-flux-blue/10;
+    color: theme('colors.flux.blue');
+  }
+
+  .toc-link {
+    color: var(--muted);
+    @apply transition-colors duration-200 py-1 block border-l-2 border-transparent pl-4;
+  }
+  .toc-link:hover {
+    color: theme('colors.flux.blue');
+  }
+
+  .toc-link-active {
+    @apply border-flux-blue;
+    color: theme('colors.flux.blue');
+  }
+
+  .breadcrumb-link {
+    color: var(--muted);
+    @apply transition-colors;
+  }
+  .breadcrumb-link:hover {
+    color: theme('colors.flux.blue');
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-foreground {
+    color: var(--foreground);
+  }
+
+  .text-muted-foreground {
+    color: var(--muted);
+  }
+
+  .bg-background {
+    background-color: var(--background);
+  }
+}
+
+/* Fumadocs overrides */
+#nd-sidebar {
+  background-color: #0d0d14 !important;
+  border-right: 1px solid #1e1e2e !important;
+}
+
+#nd-sidebar a {
+  color: #9ca3af !important;
+}
+
+#nd-sidebar a[data-active="true"] {
+  color: #8bcefc !important;
+  background-color: rgba(139, 206, 252, 0.1) !important;
+}
+
+#nd-toc {
+  border-left: 1px solid #1e1e2e !important;
+}
+
+.fumadocs-content h1,
+.fumadocs-content h2,
+.fumadocs-content h3,
+.fumadocs-content h4 {
+  color: #f1f5f9 !important;
+  scroll-margin-top: 6rem;
+}
+
+.fumadocs-content a {
+  color: #8bcefc !important;
+}
+
+.fumadocs-content a:hover {
+  color: #a191f8 !important;
+}
+
+.fumadocs-content code {
+  color: #e7aafb !important;
+  background-color: #1c1c26 !important;
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.375rem;
+}
+
+.fumadocs-content pre {
+  background-color: #16161e !important;
+  border: 1px solid #2e2e3a !important;
+  border-radius: 0.75rem !important;
+}
+
+.fumadocs-content pre code {
+  background: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+
+.fumadocs-content blockquote {
+  border-left-color: #8bcefc !important;
+  background-color: rgba(139, 206, 252, 0.05) !important;
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 1rem 1.5rem;
+}
+
+.fumadocs-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.fumadocs-content th {
+  background-color: #1c1c26;
+  color: #f1f5f9;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #2e2e3a;
+}
+
+.fumadocs-content td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #1e1e2e;
+}
+
+.fumadocs-content tr:hover {
+  background-color: #16161e;
+}
+
+/* Search dialog */
+[data-search-dialog] {
+  background-color: #111118 !important;
+  border: 1px solid #2e2e3a !important;
+  border-radius: 1rem !important;
+}
+
+[data-search-dialog] input {
+  background-color: #1c1c26 !important;
+  border-color: #2e2e3a !important;
+  color: #e2e8f0 !important;
+}
+
+/* Animation classes */
+.animate-in {
+  animation: fade-in 0.5s ease-out, slide-up 0.5s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mermaid diagram dark theme */
+.mermaid svg {
+  background-color: transparent !important;
+  filter: brightness(0.85) saturate(1.2);
+}
+
+.mermaid .label {
+  color: #e2e8f0 !important;
+}
+
+.mermaid .cluster-label span {
+  color: #e2e8f0 !important;
+}

@@ -1,0 +1,92 @@
+---
+title: Why Flux-CLI?
+description: Understand the philosophy and motivation behind building Flux-CLI.
+---
+
+# Why Flux-CLI?
+
+The AI coding tool landscape is rapidly evolving. Flux-CLI exists to fill a specific niche: **an open-source, educational, and extensible AI coding agent that you can truly understand and customize.**
+
+## The Problem with Black Boxes
+
+Most AI coding assistants are:
+
+- **Closed-source** — You cannot see how they work under the hood
+- **Limited in extensibility** — You cannot add your own tools or modify behavior
+- **Tied to specific providers** — You cannot easily switch between different LLM providers
+- **Opaque in their safety** — You cannot inspect or customize the approval policies
+
+<Callout type="warning" title="The Learning Gap">
+Many developers use AI coding tools without understanding how they actually work. Flux-CLI was built to bridge this gap — making the internals of an AI coding agent transparent, learnable, and customizable.
+</Callout>
+
+## Why Flux-CLI Exists
+
+### 1. Educational Mission
+
+Flux-CLI is first and foremost a **learning tool**. By reading the source code, you can understand:
+
+- How an AI agent **reasons** about problems
+- How **tool orchestration** works — deciding which tool to use and in what order
+- How **streaming responses** are built token by token
+- How **context management** keeps conversations within token limits
+- How **safety systems** protect against dangerous operations
+- How **lifecycle hooks** enable custom integrations at every stage
+
+### 2. Complete Extensibility
+
+Unlike closed-source alternatives, Flux-CLI lets you:
+
+- **Add custom tools** by creating Python files in `.flux-cli/tools/`
+- **Connect MCP servers** via stdio or SSE transports
+- **Configure lifecycle hooks** that trigger shell commands at any event
+- **Define custom approval policies** that match your workflow
+- **Switch LLM providers** at runtime with a simple slash command
+
+### 3. Terminal-Native Experience
+
+Flux-CLI is built for the terminal, not for a web browser or IDE extension. This means:
+
+- **Works in any terminal** — SSH sessions, tmux, screen, VSCode terminal
+- **CI/CD compatible** — Can be automated in pipelines
+- **Lightweight** — No Electron, no browser, just Python and your terminal
+- **Beautiful TUI** — Rich-powered interface with gradient ASCII art and syntax highlighting
+
+### 4. Safety First
+
+Flux-CLI implements a multi-layered safety system:
+
+| Layer | Protection |
+|---|---|
+| **Approval Policies** | 6 configurable policies from YOLO to strict confirmation |
+| **Command Blocking** | Hard-coded dangerous patterns (rm -rf /, fork bombs, etc.) |
+| **Path Validation** | Prevents operations outside the working directory |
+| **Environment Sanitization** | Filters sensitive variables from shell execution |
+| **Loop Detection** | Identifies and breaks repetitive agent behavior |
+
+## How It Differs from Other Tools
+
+| Feature | Flux-CLI | Claude Code CLI | Gemini CLI |
+|---|---|---|---|
+| **Open Source** | ✅ Full MIT License | ❌ Closed | ❌ Closed |
+| **Custom Tools** | ✅ Python plugins | ❌ No | ❌ No |
+| **MCP Support** | ✅ stdio + SSE | ✅ Limited | ❌ No |
+| **Custom Hooks** | ✅ 6 trigger points | ❌ No | ❌ No |
+| **Multi-Provider** | ✅ Any OpenAI-compatible | ❌ Claude only | ❌ Gemini only |
+| **Streaming** | ✅ Token-level | ✅ | ✅ |
+| **Sub-Agents** | ✅ Isolated contexts | ❌ No | ❌ No |
+
+## Design Philosophy
+
+Flux-CLI is guided by a few core principles:
+
+1. **Transparency over Magic** — Every decision the agent makes should be explainable
+2. **Safety over Speed** — Always ask before doing something dangerous
+3. **Extensibility over Opinionation** — Provide hooks, not hard-coded workflows
+4. **Terminal-Native over Web-Like** — Embrace the terminal, don't fight it
+5. **Learning over Polishing** — Code should be readable and educational first
+
+<Callout type="tip">
+If you're curious about how AI coding agents work at a fundamental level, Flux-CLI's source code is the best place to learn. Every component is documented and designed to be understood.
+</Callout>
+

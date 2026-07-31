@@ -1,0 +1,62 @@
+---
+title: Requirements
+description: System requirements for running Flux-CLI.
+---
+
+# Requirements
+
+## Minimum Requirements
+
+| Requirement | Minimum |
+|---|---|
+| **Python** | 3.10 or higher |
+| **RAM** | 512 MB (for the CLI itself; LLM API calls are server-side) |
+| **Storage** | ~50 MB for the codebase and dependencies |
+| **Terminal** | Any modern terminal with UTF-8 support |
+| **Internet** | Required for LLM API calls and web tools |
+
+## Recommended Requirements
+
+| Requirement | Recommended |
+|---|---|
+| **Python** | 3.11+ (better performance) |
+| **RAM** | 2 GB+ (for large context windows) |
+| **Terminal** | Terminal with true color support and Unicode |
+| **OS** | macOS 14+, Linux (any distro), Windows 10+ |
+
+## Python Dependencies
+
+Flux-CLI relies on the following Python packages:
+
+| Package | Purpose | Minimum Version |
+|---|---|---|
+| `pydantic` | Configuration and schema validation | 2.0 |
+| `rich` | Terminal UI (tables, panels, syntax highlighting) | 13.0 |
+| `click` | CLI framework for command parsing | 8.0 |
+| `openai` | LLM API client (OpenAI-compatible) | 1.0 |
+| `platformdirs` | OS-appropriate config and data directories | 3.0 |
+| `tomli` | TOML configuration file parsing | 2.0 |
+| `python-dotenv` | Environment variable loading from `.env` | 1.0 |
+| `tiktoken` | Token counting for context management | 0.5 |
+| `httpx` | HTTP client for web fetch tool | 0.24 |
+| `duckduckgo-search` | Web search functionality | 4.0 |
+| `fastmcp` | MCP client for external server integration | 0.1 |
+
+## LLM Provider Requirements
+
+Flux-CLI supports any OpenAI-compatible API provider. The default is **OpenRouter**, which provides:
+
+- Access to 200+ models through a single API
+- Free tier for many models
+- No credit card required for limited usage
+
+To use a different provider, simply change the `BASE_URL` and ensure:
+
+- The API is OpenAI-compatible (supports `/v1/chat/completions`)
+- Function calling is supported (required for tool use)
+- Streaming is supported (optional but recommended)
+
+<Callout type="warning" title="OpenRouter Limitations">
+OpenRouter imposes a `max_tokens` limit of 4000 on streaming responses. Flux-CLI complies with this by setting `max_tokens: 4000` in all API calls. This is configured in `client/llm_client.py`.
+</Callout>
+
