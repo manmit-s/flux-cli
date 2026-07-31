@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from typing import Any
 from platformdirs import user_config_dir, user_data_dir
 import tomli
@@ -96,6 +97,14 @@ def load_config(cwd: Path | None) -> Config:
         agent_md_content = _get_agent_md_files(cwd)
         if agent_md_content:
             config_dict['developer_instructions'] = agent_md_content
+
+    if "api_key" in config_dict and isinstance(config_dict["api_key"], str):
+        if not os.environ.get("API_KEY"):
+            os.environ["API_KEY"] = config_dict["api_key"]
+
+    if "base_url" in config_dict and isinstance(config_dict["base_url"], str):
+        if not os.environ.get("BASE_URL"):
+            os.environ["BASE_URL"] = config_dict["base_url"]
 
     try:
         config = Config(**config_dict)
