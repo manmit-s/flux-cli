@@ -52,7 +52,7 @@ class CLI:
 
             while True:
                 try:
-                    user_input = console.input("\n[user]>[/user] ").strip()
+                    user_input = console.input("\n[#a191f8 bold]❯[/] ").strip()
                     if not user_input:
                         continue
 
