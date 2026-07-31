@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import textwrap
 from typing import Any, Tuple
 
@@ -23,26 +24,30 @@ from utils.text import truncate_text
 
 AGENT_THEME = Theme(
     {
-        # General
-        "info": "cyan",
-        "warning": "yellow",
-        "error": "bright_red bold",
-        "success": "green",
-        "dim": "dim",
+        # General (pastel cool)
+        "info": "deep_sky_blue1",
+        "warning": "light_pink1",
+        "error": "magenta3 bold",
+        "success": "medium_turquoise",
+        "dim": "grey50",
         "muted": "grey50",
         "border": "grey35",
-        "highlight": "bold cyan",
+        "highlight": "bold cyan1",
+
         # Roles
-        "user": "bright_blue bold",
-        "assistant": "bright_white",
-        # Tools
-        "tool": "bright_magenta bold",
-        "tool.read": "cyan",
-        "tool.write": "yellow",
-        "tool.shell": "magenta",
-        "tool.network": "bright_blue",
-        "tool.memory": "green",
-        "tool.mcp": "bright_cyan",
+        # Use violet for user, soft white for assistant
+        "user": "slate_blue1 bold",       # maps to ~#a191f8
+        "assistant": "white",             # keep high contrast
+
+        # Tools – grouped in the palette
+        "tool": "orchid1 bold",           # ~lavender pink #e7aafb
+        "tool.read": "deep_sky_blue1",    # ~#8bcefc
+        "tool.write": "light_pink1",      # ~#e7aafb
+        "tool.shell": "medium_purple",    # ~#a191f8
+        "tool.network": "cyan1",          # ~#7fe4eb
+        "tool.memory": "medium_turquoise",
+        "tool.mcp": "cyan1 bold",
+
         # Code / blocks
         "code": "white",
     }
@@ -52,10 +57,76 @@ _console: Console | None = None
 
 def get_console() -> Console:
     global _console
-    if(_console is None):
-        _console = Console(theme=AGENT_THEME, highlight=False)
-
+    if _console is None:
+        if hasattr(sys.stdout, "reconfigure"):
+            try:
+                sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+        _console = Console(theme=AGENT_THEME, highlight=False, legacy_windows=False)
     return _console
+
+FLUX_GRADIENT_COLORS = ["#e7aafb", "#a191f8", "#8bcefc", "#7fe4eb"]
+
+FLUX_ASCII_ART = """
+██╗    ███████╗██╗     ██╗   ██╗██╗  ██╗
+╚██╗   ██╔════╝██║     ██║   ██║╚██╗██╔╝
+ ╚██╗  █████╗  ██║     ██║   ██║ ╚███╔╝ 
+ ██╔╝  ██╔══╝  ██║     ██║   ██║ ██╔██╗ 
+██╔╝   ██║     ███████╗╚██████╔╝██╔╝ ██╗
+╚═╝    ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝
+"""
+
+
+def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
+    hex_str = hex_str.lstrip("#")
+    return int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)
+
+
+def _rgb_to_hex(r: int, g: int, b: int) -> str:
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _interpolate_color(colors: list[str], factor: float) -> str:
+    if factor <= 0.0:
+        return colors[0]
+    if factor >= 1.0:
+        return colors[-1]
+
+    num_segments = len(colors) - 1
+    segment = factor * num_segments
+    idx = int(segment)
+    if idx >= num_segments:
+        return colors[-1]
+
+    t = segment - idx
+    r1, g1, b1 = _hex_to_rgb(colors[idx])
+    r2, g2, b2 = _hex_to_rgb(colors[idx + 1])
+
+    r = int(r1 + (r2 - r1) * t)
+    g = int(g1 + (g2 - g1) * t)
+    b = int(b1 + (b2 - b1) * t)
+
+    return _rgb_to_hex(r, g, b)
+
+
+def render_gradient_ascii(ascii_art: str, colors: list[str]) -> Text:
+    lines = [l for l in ascii_art.splitlines() if l.strip()]
+    if not lines:
+        return Text("")
+
+    max_len = max(len(line) for line in lines)
+    result = Text()
+
+    for line in lines:
+        for i, char in enumerate(line):
+            factor = i / max(1, max_len - 1)
+            color = _interpolate_color(colors, factor)
+            result.append(char, style=f"bold {color}")
+        result.append("\n")
+
+    return result
+
 
 class TUI:
     def __init__(self, config: Config, console: Console | None = None,) -> None:
@@ -68,7 +139,7 @@ class TUI:
     
     def begin_assistant(self) -> None:
         self.console.print()
-        self.console.print(Rule(Text("Assistant", style = "assistant")))
+        self.console.print(Rule(Text(" ✦ Assistant ", style="bold #e7aafb"), style="#374151"))
         self._assistant_stream_open = True
 
     def end_assistant(self) -> None:
@@ -79,7 +150,7 @@ class TUI:
 
     def begin_streaming_markdown(self) -> None:
         self.console.print()
-        self.console.print(Rule(Text("Assistant", style="assistant")))
+        self.console.print(Rule(Text(" ✦ Assistant ", style="bold #e7aafb"), style="#374151"))
         self._markdown_buffer = ""
         self._live = Live(Markdown(""), console=self.console, refresh_per_second=10, transient=False)
         self._live.start()
@@ -155,8 +226,8 @@ class TUI:
         border_style = f"tool.{tool_kind}" if tool_kind else "tool"
 
         title = Text.assemble(
-            ("● ", "muted"),
-            (name, "tool"),
+            ("⚡ ", "bold #a191f8"),
+            (name, f"tool.{tool_kind}" if tool_kind else "tool"),
             (" ", "muted"),
             (f"#{call_id[:8]}", "muted")
         )
@@ -167,9 +238,6 @@ class TUI:
             if isinstance(val , str) and self.cwd:
                 display_args[key] = str(display_path_rel_to_cwd(val, self.cwd))
 
-
-
-
         empty_args: dict[str, Any] = {}
         panel_args = display_args if isinstance(display_args, dict) and display_args else empty_args
 
@@ -177,7 +245,7 @@ class TUI:
             self._render_args_table(name, panel_args),
             title = title,
             title_align='left',
-            subtitle=Text('running', style="muted"),
+            subtitle=Text('⚡ running', style="italic #8bcefc"),
             subtitle_align='right',
             border_style=border_style,
             box=box.ROUNDED,
@@ -245,13 +313,41 @@ class TUI:
         }.get(suffix, "text")
 
     def print_welcome(self, title: str, lines: list[str]) -> None:
-        body = "\n".join(lines)
+        self.console.print()
+        banner = render_gradient_ascii(FLUX_ASCII_ART, FLUX_GRADIENT_COLORS)
+        self.console.print(banner)
+
+        content = Text()
+        for i, line in enumerate(lines):
+            if line.startswith("model:"):
+                val = line[6:].strip()
+                content.append("model: ", style="dim")
+                content.append(val, style="bold #8bcefc")
+            elif line.startswith("cwd:"):
+                val = line[4:].strip()
+                content.append("cwd: ", style="dim")
+                content.append(val, style="bold #7fe4eb")
+            elif line.startswith("commands:"):
+                content.append("commands: ", style="dim")
+                cmds = line[9:].strip().split()
+                cmd_colors = ["#e7aafb", "#a191f8", "#8bcefc", "#7fe4eb", "#f43f5e", "#4ade80"]
+                for c_idx, cmd in enumerate(cmds):
+                    c_color = cmd_colors[c_idx % len(cmd_colors)]
+                    content.append(cmd, style=f"bold {c_color}")
+                    if c_idx < len(cmds) - 1:
+                        content.append("  ", style="dim")
+            else:
+                content.append(line, style="code")
+
+            if i < len(lines) - 1:
+                content.append("\n")
+
         self.console.print(
             Panel(
-                Text(body, style='code'),
-                title=Text(title, style="highlight"),
-                title_align="left", 
-                border_style='border',
+                content,
+                title=Text(f"✦ {title}", style="bold #7fe4eb"),
+                title_align="left",
+                border_style="#374151",
                 box=box.ROUNDED,
                 padding=(1, 2),
             )
@@ -524,31 +620,44 @@ class TUI:
         return response.lower() in {"y", "yes"}
 
     def show_help(self) -> None:
-        help_text = textwrap.dedent(
-            """
-            ## Commands
+        table = Table.grid(padding=(0, 2))
+        table.add_column(style="bold #a191f8", justify="right", no_wrap=True)
+        table.add_column(style="dim")
 
-            - `/help` - Show this help
-            - `/exit` or `/quit` - Exit the agent
-            - `/clear` - Clear conversation history
-            - `/config` - Show current configuration
-            - `/model <name>` - Change the model
-            - `/approval <mode>` - Change approval mode
-            - `/stats` - Show session statistics
-            - `/tools` - List available tools
-            - `/mcp` - Show MCP server status
-            - `/save` - Save current session
-            - `/checkpoint [name]` - Create a checkpoint
-            - `/checkpoints` - List available checkpoints
-            - `/restore <checkpoint_id>` - Restore a checkpoint
-            - `/sessions` - List saved sessions
-            - `/resume <session_id>` - Resume a saved session
+        table.add_row("/help", "Show this help dialog")
+        table.add_row("/exit, /quit", "Exit the agent session")
+        table.add_row("/clear", "Clear conversation history")
+        table.add_row("/config", "Show active configuration")
+        table.add_row("/model <name>", "Switch LLM model at runtime")
+        table.add_row("/approval <mode>", "Set safety approval policy (on-request, auto, yolo)")
+        table.add_row("/stats", "Display session token usage & turn stats")
+        table.add_row("/tools", "List available tools")
+        table.add_row("/mcp", "Show MCP server connection status")
+        table.add_row("/save", "Save current session state")
+        table.add_row("/checkpoint [name]", "Create a named checkpoint")
+        table.add_row("/checkpoints", "List saved checkpoints")
+        table.add_row("/restore <id>", "Restore session from a checkpoint")
+        table.add_row("/sessions", "List all saved sessions")
+        table.add_row("/resume <id>", "Resume a previously saved session")
 
-            ## Tips
+        tips = Text()
+        tips.append("\nPro Tips:\n", style="bold #e7aafb")
+        tips.append(" ⦁ Type plain text to chat or request coding assistance\n", style="dim")
+        tips.append(" ⦁ Reference workspace files directly in your prompts\n", style="dim")
+        tips.append(" ⦁ Configure hooks in ", style="dim")
+        tips.append(".flux-cli/config.toml", style="bold #8bcefc")
+        tips.append(" for event triggers\n", style="dim")
 
-            - Just type your message to chat with the agent
-            - The agent can read, write, and execute code
-            - Some operations require approval (can be configured)
-            """
-        ).strip()
-        self.console.print(Markdown(help_text))
+        content = Group(table, tips)
+
+        self.console.print()
+        self.console.print(
+            Panel(
+                content,
+                title=Text("✦ Flux-CLI Commands & Help", style="bold #7fe4eb"),
+                title_align="left",
+                border_style="#374151",
+                box=box.ROUNDED,
+                padding=(1, 2),
+            )
+        )
