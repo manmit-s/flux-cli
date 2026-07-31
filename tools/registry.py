@@ -135,6 +135,7 @@ class ToolRegistry:
             result = await tool.execute(invocation)
         except Exception as e:
             logger.exception(f"Tool {name} raised unexpected error")
+            await hook_system.trigger_on_error(e)
             result = ToolResult.error_result(
                 f"Internal error: {str(e)}",
                 metadata={
