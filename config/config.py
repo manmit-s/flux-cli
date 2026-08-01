@@ -126,8 +126,9 @@ class Config(BaseModel):
     def temperature(self) -> float:
         return self.model.temperature
 
-    @model_name.setter
-    def temperature(self, value: str) -> None:
+    # Fix #5: was incorrectly decorated with @model_name.setter
+    @temperature.setter
+    def temperature(self, value: float) -> None:
         self.model.temperature = value
 
     def validate(self) -> list[str]:
