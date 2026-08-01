@@ -18,9 +18,9 @@ __all__ = [
     "ListDirTool",
     "GrepTool",
     "GlobTool",
-    "WebSearchTool"
-    "WebFetchTool"
-    "ToDoTool"
+    "WebSearchTool",
+    "WebFetchTool",
+    "ToDoTool",
     "MemoryTool",
     
     ]
