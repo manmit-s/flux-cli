@@ -142,4 +142,6 @@ class ApprovalManager:
                 result = await result
             return bool(result)
 
-        return True
+        # Fix #21: Default to False (deny) when no interactive callback is set.
+        # This prevents silent auto-approval in single-shot mode (flux "prompt").
+        return False

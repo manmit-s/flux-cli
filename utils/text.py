@@ -3,6 +3,7 @@ import tiktoken
 def get_tokenizer(model: str):
     try:
         encoding = tiktoken.encoding_for_model(model)
+        return encoding.encode  # Fix #27: was missing return, causing None to always be returned
     except Exception:
         encoding = tiktoken.get_encoding("cl100k_base")
         return encoding.encode

@@ -149,7 +149,7 @@ class Tools(abc.ABC):
         return []
             
     def is_mutating(self, params: dict[str, Any]) -> bool:
-        return self.kind in {ToolKind.WRITE, ToolKind.SHELL, ToolKind.SHELL, ToolKind.MEMORY}
+        return self.kind in {ToolKind.WRITE, ToolKind.SHELL, ToolKind.MCP, ToolKind.MEMORY}  # Fix #6: removed duplicate SHELL, added missing MCP
     
     async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
         if not self.is_mutating(invocation.params):
