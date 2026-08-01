@@ -43,3 +43,6 @@ docs/tsconfig.tsbuildinfo
 
 # For PYPI
 flux_cli
+
+# Import fixing
+scratch/
