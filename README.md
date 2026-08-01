@@ -2,7 +2,7 @@
 
 An AI coding agent built from scratch — inspired by Claude Code CLI and Gemini CLI — featuring full multi-tool orchestration, streaming responses, sub-agent delegation, MCP server integration, dynamic lifecycle hooks, safety approval policies, and a styled Rich terminal UI with gradient ASCII branding.
 
-[![flux-cli.png](https://i.postimg.cc/HWKhbWrT/flux-cli.png)](https://postimg.cc/rz1jkkGH)
+[![flux-init-image.png](https://i.postimg.cc/k4P8By6c/flux-init-image.png)](https://postimg.cc/2qT3thxb)
 
 <!-- ```text
 ██╗    ███████╗██╗     ██╗   ██╗██╗  ██╗
