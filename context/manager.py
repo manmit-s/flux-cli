@@ -165,12 +165,13 @@ class ContextManager:
         self._messages.append(continue_item)
 
     def prune_tool_outputs(self) -> int:
+        PRUNE_MINIMUM_COUNT = 5  # Fix #31: was comparing message count against token threshold (20k)
         user_message_count = sum(1 for msg in self._messages if msg.role == 'user')
         if user_message_count < 2:
             return 0
 
         total_tokens = 0
-        pruned_tokens = 0
+        pruned_count = 0
         to_prune: list[MessageItem] = []
         for msg in reversed(self._messages):
             if msg.role == 'tool' and msg.tool_call_id:
@@ -182,20 +183,20 @@ class ContextManager:
                 total_tokens += tokens
 
                 if total_tokens > self.PRUNE_PROTECT_TOKENS:
-                    pruned_tokens += 1
+                    pruned_count += 1
                     to_prune.append(msg)
-        if pruned_tokens < self.PRUNE_MINIMUM_TOKENS:
+        if pruned_count < PRUNE_MINIMUM_COUNT:
             return 0
 
-        pruned_count = 0
+        applied_count = 0
         for msg in to_prune:
             msg.content = '[Old tool result content cleared]'
             msg.token_count = count_tokens(msg.content, self._model_name)
             msg.pruned_at = datetime.now()
-            pruned_count += 1
+            applied_count += 1
 
 
-        return pruned_count
+        return applied_count
 
     def prune_tool_output(self) -> int:
         return self.prune_tool_outputs()
