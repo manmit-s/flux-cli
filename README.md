@@ -185,10 +185,10 @@ pip install -r requirements.txt
 
 ```bash
 # Recommended for CLI tools:
-pipx install flux-cli
+pipx install flux-cli-ai
 
 # Or via standard pip:
-pip install flux-cli
+pip install flux-cli-ai
 
 # Launch directly from anywhere in your terminal:
 flux
