@@ -24,32 +24,31 @@ from utils.text import truncate_text
 
 AGENT_THEME = Theme(
     {
-        # General (pastel cool)
-        "info": "deep_sky_blue1",
-        "warning": "light_pink1",
-        "error": "magenta3 bold",
-        "success": "medium_turquoise",
-        "dim": "grey50",
-        "muted": "grey50",
-        "border": "grey35",
-        "highlight": "bold cyan1",
+        # General
+        "info": "#F6DBC0",
+        "warning": "#c76f9d",
+        "error": "bold #c76f9d",
+        "success": "bold #F6DBC0",
+        "dim": "#7a6b7b",
+        "muted": "#7a6b7b",
+        "border": "#502D55",
+        "highlight": "bold #F6DBC0",
 
         # Roles
-        # Use violet for user, soft white for assistant
-        "user": "slate_blue1 bold",       # maps to ~#a191f8
-        "assistant": "white",             # keep high contrast
+        "user": "bold #c76f9d",
+        "assistant": "#F8F4E9",
 
-        # Tools – grouped in the palette
-        "tool": "orchid1 bold",           # ~lavender pink #e7aafb
-        "tool.read": "deep_sky_blue1",    # ~#8bcefc
-        "tool.write": "light_pink1",      # ~#e7aafb
-        "tool.shell": "medium_purple",    # ~#a191f8
-        "tool.network": "cyan1",          # ~#7fe4eb
-        "tool.memory": "medium_turquoise",
-        "tool.mcp": "cyan1 bold",
+        # Tools
+        "tool": "bold #884d90",
+        "tool.read": "#F6DBC0",
+        "tool.write": "#c76f9d",
+        "tool.shell": "#884d90",
+        "tool.network": "#F6DBC0",
+        "tool.memory": "#c76f9d",
+        "tool.mcp": "bold #F6DBC0",
 
         # Code / blocks
-        "code": "white",
+        "code": "#F8F4E9",
     }
 )
 
@@ -66,7 +65,7 @@ def get_console() -> Console:
         _console = Console(theme=AGENT_THEME, highlight=False, legacy_windows=False)
     return _console
 
-FLUX_GRADIENT_COLORS = ["#e7aafb", "#a191f8", "#8bcefc", "#7fe4eb"]
+FLUX_GRADIENT_COLORS = ["#884d90", "#c76f9d", "#F6DBC0", "#F8F4E9"]
 
 FLUX_ASCII_ART = """
 ██╗    ███████╗██╗     ██╗   ██╗██╗  ██╗
@@ -322,15 +321,15 @@ class TUI:
             if line.startswith("model:"):
                 val = line[6:].strip()
                 content.append("model: ", style="dim")
-                content.append(val, style="bold #8bcefc")
+                content.append(val, style="bold #F6DBC0")
             elif line.startswith("cwd:"):
                 val = line[4:].strip()
                 content.append("cwd: ", style="dim")
-                content.append(val, style="bold #7fe4eb")
+                content.append(val, style="bold #c76f9d")
             elif line.startswith("commands:"):
                 content.append("commands: ", style="dim")
                 cmds = line[9:].strip().split()
-                cmd_colors = ["#e7aafb", "#a191f8", "#8bcefc", "#7fe4eb", "#f43f5e", "#4ade80"]
+                cmd_colors = ["#884d90", "#c76f9d", "#F6DBC0", "#F8F4E9"]
                 for c_idx, cmd in enumerate(cmds):
                     c_color = cmd_colors[c_idx % len(cmd_colors)]
                     content.append(cmd, style=f"bold {c_color}")
@@ -345,9 +344,9 @@ class TUI:
         self.console.print(
             Panel(
                 content,
-                title=Text(f"✦ {title}", style="bold #7fe4eb"),
+                title=Text(f"✦ {title}", style="bold #F6DBC0"),
                 title_align="left",
-                border_style="#374151",
+                border_style="#502D55",
                 box=box.ROUNDED,
                 padding=(1, 2),
             )
@@ -621,7 +620,7 @@ class TUI:
 
     def show_help(self) -> None:
         table = Table.grid(padding=(0, 2))
-        table.add_column(style="bold #a191f8", justify="right", no_wrap=True)
+        table.add_column(style="bold #c76f9d", justify="right", no_wrap=True)
         table.add_column(style="dim")
 
         table.add_row("/help", "Show this help dialog")
@@ -641,11 +640,11 @@ class TUI:
         table.add_row("/resume <id>", "Resume a previously saved session")
 
         tips = Text()
-        tips.append("\nPro Tips:\n", style="bold #e7aafb")
+        tips.append("\nPro Tips:\n", style="bold #c76f9d")
         tips.append(" ⦁ Type plain text to chat or request coding assistance\n", style="dim")
         tips.append(" ⦁ Reference workspace files directly in your prompts\n", style="dim")
         tips.append(" ⦁ Configure hooks in ", style="dim")
-        tips.append(".flux-cli/config.toml", style="bold #8bcefc")
+        tips.append(".flux-cli/config.toml", style="bold #F6DBC0")
         tips.append(" for event triggers\n", style="dim")
 
         content = Group(table, tips)
@@ -654,9 +653,9 @@ class TUI:
         self.console.print(
             Panel(
                 content,
-                title=Text("✦ Flux-CLI Commands & Help", style="bold #7fe4eb"),
+                title=Text("✦ Flux-CLI Commands & Help", style="bold #F6DBC0"),
                 title_align="left",
-                border_style="#374151",
+                border_style="#502D55",
                 box=box.ROUNDED,
                 padding=(1, 2),
             )
