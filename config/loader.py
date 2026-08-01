@@ -2,7 +2,10 @@ from pathlib import Path
 import os
 from typing import Any
 from platformdirs import user_config_dir, user_data_dir
-import tomli
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 from config.config import Config
 
@@ -26,9 +29,9 @@ def get_system_config_path() -> Path:
 def _parse_toml(path: Path):
     try:
         with open(path, 'rb') as f:
-            return tomli.load(f)
+            return tomllib.load(f)
 
-    except tomli.TOMLDecodeError as e:
+    except tomllib.TOMLDecodeError as e:
         raise ConfigError(f"Invalid TOML in {path}: {e}", config_file=str(path)) from e
     except (OSError, IOError) as e:
         raise ConfigError(f"Failed to read config file {path}: {e}", config_file=str(path)) from e

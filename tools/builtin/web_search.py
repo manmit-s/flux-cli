@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 class WebSearchParams(BaseModel):
     query: str = Field(
@@ -18,15 +18,10 @@ class WebSearchTool(Tools):
         params = WebSearchParams(**invocation.params)
 
         try:
-            results = DDGS().text(
-                params.query,
-                region='us-en',
-                safesearch='off',
-                timelimit='y',
-                page=1,
-                backend='auto',
-                max_results=params.max_results,
-            )
+            results = list(DDGS().text(params.query, max_results=params.max_results))
+            if not results and ('-' in params.query or '_' in params.query):
+                cleaned_query = params.query.replace('-', ' ').replace('_', ' ')
+                results = list(DDGS().text(cleaned_query, max_results=params.max_results))
         except Exception as e:
             return ToolResult.error_result(f"Search failed: {e}")
         

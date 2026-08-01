@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flux-cli-ai"
-version = "0.1.2"
+version = "0.1.8"
 description = "A powerful agentic AI coding CLI built with Python and Rich TUI"
 readme = "README.md"
 authors = [{ name = "Manmit", email = "work.manmit.samal@zohomail.in" }]
@@ -22,7 +22,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "tiktoken>=0.5.0",
     "httpx>=0.24.0",
-    "duckduckgo-search>=4.0.0",
+    "ddgs>=9.0.0",
     "fastmcp>=0.1.0",
 ]
 
