@@ -381,10 +381,10 @@ def main(
                     "Welcome to Flux-CLI!\n\n"
                     "No valid API key detected. Please configure your API key, base URL, and model.\n"
                     "Documentation: https://manmit-s.github.io/flux-cli",
-                    style="bold #7fe4eb"
+                    style="bold #F6DBC0"
                 ),
                 title="✦ Flux-CLI Onboarding",
-                border_style="#374151",
+                border_style="#502D55",
                 box=box.ROUNDED,
                 padding=(1, 2)
             )

@@ -68,20 +68,20 @@ const features = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
       <div className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none">
-        <nav className="pointer-events-auto bg-surface-50/80 backdrop-blur-xl border border-surface-300/50 rounded-full px-6 h-14 flex items-center justify-between gap-12 shadow-2xl">
+        <nav className="pointer-events-auto glass-panel !rounded-full px-6 h-14 flex items-center justify-between gap-12 shadow-2xl">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-sm font-bold text-flux-purple tracking-wide">Flux-CLI</span>
+            <span className="text-sm font-bold text-[var(--accent)] tracking-wide">Flux-CLI</span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/docs/introduction" className="text-sm font-medium text-muted-foreground hover:text-flux-purple transition-colors">
+            <Link href="/docs/introduction" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Docs
             </Link>
             <Link
               href="https://github.com/manmit-s/flux-cli"
-              className="text-sm font-medium text-muted-foreground hover:text-flux-purple transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -89,7 +89,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/docs/quick-start"
-              className="px-5 py-2.5 text-sm font-bold rounded-full bg-flux-purple text-black hover:opacity-90 transition-all duration-200"
+              className="px-5 py-2.5 text-sm font-bold rounded-full bg-[var(--accent-purple)] text-[var(--accent-ivory)] hover:bg-[var(--accent-mauve)] transition-all duration-200"
             >
               Get Started
             </Link>
@@ -128,13 +128,13 @@ export default function HomePage() {
           >
             <Link
               href="/docs/quick-start"
-              className="px-8 py-3 text-sm font-bold rounded-full bg-flux-purple text-black hover:opacity-90 transition-colors shadow-lg shadow-flux-purple/20"
+              className="px-8 py-3 text-sm font-bold rounded-full bg-[var(--accent-purple)] text-[var(--accent-ivory)] hover:bg-[var(--accent-mauve)] transition-colors shadow-lg shadow-[var(--accent-purple)]/20"
             >
               Quick Start →
             </Link>
             <Link
               href="/docs/architecture"
-              className="px-8 py-3 text-sm font-medium rounded-full bg-surface-200 border border-surface-300/50 hover:bg-surface-300/50 hover:border-flux-purple/30 transition-all"
+              className="px-8 py-3 text-sm font-medium rounded-full bg-[var(--card-bg)] border border-[var(--border)] hover:bg-[var(--card-hover)] hover:border-[var(--accent-mauve)] transition-all text-[var(--foreground)]"
             >
               View Architecture
             </Link>
@@ -142,7 +142,7 @@ export default function HomePage() {
               href="https://github.com/manmit-s/flux-cli"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3 text-sm font-medium rounded-full bg-surface-200 border border-surface-300/50 hover:bg-surface-300/50 hover:border-flux-purple/30 transition-all"
+              className="px-8 py-3 text-sm font-medium rounded-full bg-[var(--card-bg)] border border-[var(--border)] hover:bg-[var(--card-hover)] hover:border-[var(--accent-mauve)] transition-all text-[var(--foreground)]"
             >
               GitHub →
             </Link>
@@ -159,7 +159,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-flux-purple mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-[var(--accent-peach)] mb-4">
               Everything You Need in an AI Coding Agent
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -179,8 +179,8 @@ export default function HomePage() {
       {/* Getting Started Section */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-surface/30 border border-surface-300/30 rounded-3xl p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-flux-purple mb-4">
+          <div className="glass-card p-12 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-[var(--accent-peach)] mb-4">
               Ready to Get Started?
             </h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
@@ -190,13 +190,13 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/docs/installation"
-                className="px-8 py-3 text-sm font-bold rounded-full bg-flux-purple text-black hover:opacity-90 transition-colors shadow-lg shadow-flux-purple/20"
+                className="px-8 py-3 text-sm font-bold rounded-full bg-[var(--accent-purple)] text-[var(--accent-ivory)] hover:bg-[var(--accent-mauve)] transition-colors shadow-lg shadow-[var(--accent-purple)]/20"
               >
                 Installation Guide
               </Link>
               <Link
                 href="/docs/cli-commands"
-                className="px-8 py-3 text-sm font-medium rounded-full bg-surface-300/50 hover:bg-surface-400/50 transition-colors border border-surface-300/50"
+                className="px-8 py-3 text-sm font-medium rounded-full bg-[var(--card-bg)] hover:bg-[var(--card-hover)] transition-colors border border-[var(--border)] text-[var(--foreground)]"
               >
                 CLI Reference
               </Link>
@@ -206,10 +206,10 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-surface-300/30">
+      <footer className="py-12 px-6 border-t border-[var(--border)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-flux-purple tracking-wide">Flux-CLI</span>
+            <span className="text-sm font-bold text-[var(--accent-peach)] tracking-wide">Flux-CLI</span>
             <span className="text-sm text-muted-foreground">— MIT License</span>
           </div>
           <div className="flex items-center gap-6">

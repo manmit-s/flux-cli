@@ -15,9 +15,9 @@ def run_config_wizard() -> bool:
     console.print()
     console.print(
         Panel(
-            Text("Welcome to Flux-CLI First-Time Setup Wizard!\nThis wizard will configure your API key, Base URL, and Model ID.", style="bold #7fe4eb"),
+            Text("Welcome to Flux-CLI First-Time Setup Wizard!\nThis wizard will configure your API key, Base URL, and Model ID.", style="bold #F6DBC0"),
             title="✦ Flux-CLI Setup",
-            border_style="#374151",
+            border_style="#502D55",
             box=box.ROUNDED,
             padding=(1, 2)
         )
@@ -25,7 +25,7 @@ def run_config_wizard() -> bool:
 
     # 1. API Key
     while True:
-        api_key = Prompt.ask("[bold #a191f8]Enter your API Key[/]").strip()
+        api_key = Prompt.ask("[bold #c76f9d]Enter your API Key[/]").strip()
         if api_key:
             break
         console.print("[red]API Key cannot be empty.[/red]")
