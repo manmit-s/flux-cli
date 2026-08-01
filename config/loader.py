@@ -99,12 +99,12 @@ def load_config(cwd: Path | None) -> Config:
             config_dict['developer_instructions'] = agent_md_content
 
     if "api_key" in config_dict and isinstance(config_dict["api_key"], str):
-        if not os.environ.get("API_KEY"):
+        curr_key = os.environ.get("API_KEY")
+        if not curr_key or curr_key == "YOUR_API_KEY_HERE":
             os.environ["API_KEY"] = config_dict["api_key"]
 
     if "base_url" in config_dict and isinstance(config_dict["base_url"], str):
-        if not os.environ.get("BASE_URL"):
-            os.environ["BASE_URL"] = config_dict["base_url"]
+        os.environ["BASE_URL"] = config_dict["base_url"]
 
     try:
         config = Config(**config_dict)
