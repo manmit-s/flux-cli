@@ -156,13 +156,13 @@ class CLI:
         cmd_args = parts[1] if len(parts) > 1 else ""
         if cmd_name == "/exit" or cmd_name == "/quit":
             return False
-        elif command == "/help":
+        elif cmd == "/help":
             self.tui.show_help()
-        elif command == "/clear":
+        elif cmd == "/clear":
             self.agent.session.context_manager.clear()
             self.agent.session.loop_detector.clear()
             console.print("[success]Conversation cleared [/success]")
-        elif command == "/config":
+        elif cmd == "/config":
             console.print("\n[bold]Current Configuration[/bold]")
             console.print(f"  Model: {self.config.model_name}")
             console.print(f"  Temperature: {self.config.temperature}")
@@ -327,7 +327,7 @@ class CLI:
                     await self.agent.session.mcp_manager.shutdown()
                     self.agent.session = session
                     console.print(
-                        f"[success]Resumed session: {session.session_id}, checkpoint: {checkpoint_id}[/success]"
+                        f"[success]Resumed session: {session.session_id}, checkpoint: {cmd_args}[/success]"
                     )
         else:
             console.print(f"[error]Unknown command: {cmd_name}[/error]")
