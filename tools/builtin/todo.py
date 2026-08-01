@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from config.config import Config
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
 from rich.console import Console
@@ -12,8 +12,15 @@ class ToDoParams(BaseModel):
     action: str = Field(
         ..., description="Action: 'add', 'complete', 'list', 'clear'"
     )
-    id: str | None = Field(..., description='Todo ID (for complete)')
+    id: str | None = Field(None, description='Todo ID (for complete)')
     content: str | None = Field(None, description='Todo content (for add)')
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def coerce_id_to_str(cls, v):
+        if v is None or isinstance(v, str):
+            return v
+        return str(v)
 
 class ToDoTool(Tools):
     name = 'todos'
@@ -34,7 +41,8 @@ class ToDoTool(Tools):
         for todo_id, content in self._todos.items():
             table.add_row(todo_id, content)
 
-        console.print(table)
+        # Fix #14: removed console.print(table) — it caused duplicate display
+        # (once from the direct print, once from the caller rendering the returned string)
         return str(table)
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
@@ -62,7 +70,7 @@ class ToDoTool(Tools):
                 return ToolResult.success_result("No todos left!")
             
             return ToolResult.success_result(self._display_todos())
-        elif params.action == 'clear':
+        elif params.action.lower() == 'clear':
             count = len(self._todos)
             self._todos.clear()
             return ToolResult.success_result(f"Cleared {count} todos")
