@@ -24,6 +24,7 @@ class MCPManager:
         # print(mcp_configs)
 
         if not mcp_configs:
+            self._initialized = True  # Fix #33: was not setting _initialized on early return
             return
         
         for name, server_config in mcp_configs.items():
