@@ -10,7 +10,7 @@ class MemoryParams(BaseModel):
     action: str = Field(
         ..., description="Action: 'set', 'get', 'delete', 'list', 'clear'"
     )
-    key: str | None = Field(..., description='Memory key (required for `set`, `get`, `delete`)')
+    key: str | None = Field(None, description='Memory key (required for `set`, `get`, `delete`)')
     value: str | None = Field(None, description='Value to store (required for `set`)')
 
 class MemoryTool(Tools):
@@ -78,7 +78,7 @@ class MemoryTool(Tools):
             self._save_memory(memory)
             return ToolResult.success_result(f"Deleted Memory: {params.key}")
         
-        elif params.action == 'list':
+        elif params.action.lower() == 'list':  # Fix #36: was exact-match (case-sensitive)
             memory = self._load_memory()
             entries = memory.get('entries', {})
             if not entries:
@@ -87,7 +87,7 @@ class MemoryTool(Tools):
             for key, value in sorted(entries.items()):
                 lines.append(f"  {key} : {value}")
             return ToolResult.success_result("\n".join(lines), metadata = {'found' : True})
-        elif params.action == 'clear':
+        elif params.action.lower() == 'clear':  # Fix #36: was exact-match (case-sensitive)
             memory = self._load_memory()
             count = len(memory.get('entries', {}))
             memory['entries'] = {}
