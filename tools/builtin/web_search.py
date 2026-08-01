@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from tools.base import ToolInvocation, ToolKind, ToolResult, Tools
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 
 class WebSearchParams(BaseModel):
     query: str = Field(
