@@ -4,21 +4,45 @@
 @config "../tailwind.config.ts";
 
 @layer base {
+  /* ==========================================================================
+     MODULAR THEME PALETTES (DARK THEME)
+     To test a new palette, simply update the CSS variables below!
+     ========================================================================== */
   :root {
-    --background: #0a0a0f;
-    --foreground: #e2e8f0;
-    --muted: #6b7280;
-    --border: #1e1e2e;
-    --accent: #8bcefc;
-    --accent-hover: #a191f8;
-    --card: #111118;
-    --card-hover: #16161e;
+    /* ------------------------------------------------------------------------
+       CURRENT PALETTE: Deep Purple & Warm Peach
+       Raw Colors:
+       - #502D55 (Deep purple)
+       - #935073 (Muted mauve)
+       - #F6DBC0 (Warm peach/cream)
+       - #F8F4E9 (Off-white/ivory)
+       ------------------------------------------------------------------------ */
+    --background: #110913;          /* Ultra dark deep purple base */
+    --foreground: #F8F4E9;          /* Off-white/ivory main text */
+    --muted: #bda2b4;               /* Soft mauve secondary text */
+    --border: #351b39;              /* Dark purple subtle border */
+    
+    --sidebar-bg: #160c19;          /* Darker sidebar background */
+    --card-bg: #1c1020;             /* Card & panel background */
+    --card-hover: #26162c;          /* Card hover background */
+    
+    --accent: #F6DBC0;              /* Warm peach primary highlight */
+    --accent-purple: #502D55;       /* Deep purple brand color */
+    --accent-mauve: #935073;        /* Muted mauve secondary brand */
+    --accent-peach: #F6DBC0;        /* Warm peach */
+    --accent-ivory: #F8F4E9;        /* Off-white */
+    
+    --code-bg: #0d060f;             /* Dark code block background */
+    --code-border: #3b1c40;         /* Code block border */
+    --inline-code-bg: rgba(147, 80, 115, 0.25);
+    --inline-code-text: #F6DBC0;
+
     --radius: 0.75rem;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: #2e2e3a transparent;
+    scrollbar-color: var(--accent-mauve) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -30,8 +54,12 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: #2e2e3a;
+    background-color: var(--border);
     border-radius: 3px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent-mauve);
   }
 
   html {
@@ -42,103 +70,116 @@
     background-color: var(--background);
     color: var(--foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
   }
 
   ::selection {
-    background-color: rgba(138, 180, 248, 0.3);
+    background-color: rgba(147, 80, 115, 0.4);
     color: #ffffff;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-surface/50 backdrop-blur-xl border border-surface-300/50 rounded-xl;
+    background-color: rgba(28, 16, 32, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
   }
 
   .glass-card {
-    @apply bg-surface/30 backdrop-blur-lg border border-surface-300/30 rounded-xl hover:border-flux-blue/30 transition-all duration-300;
+    background-color: rgba(28, 16, 32, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+  }
+  .glass-card:hover {
+    border-color: var(--accent-mauve);
+    background-color: var(--card-hover);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   }
 
   .gradient-border {
     position: relative;
-    border-radius: 0.75rem;
+    background-clip: padding-box;
+    border: 1px solid transparent;
   }
 
   .gradient-border::before {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0; right: 0; bottom: 0; left: 0;
+    z-index: -1;
+    margin: -1px;
     border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, #e7aafb, #a191f8, #8bcefc, #7fe4eb);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-mauve), var(--accent-peach));
   }
 
   .hero-glow {
     position: relative;
   }
 
-  .hero-glow::after {
+  .hero-glow::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -25%;
-    width: 150%;
-    height: 200%;
-    background: radial-gradient(ellipse at center, rgba(138, 180, 248, 0.08) 0%, transparent 70%);
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse at center, rgba(147, 80, 115, 0.15) 0%, transparent 70%);
     pointer-events: none;
     z-index: -1;
   }
 
   .code-highlight {
-    @apply bg-surface-200 rounded-lg border border-surface-300/50;
+    background-color: var(--code-bg);
+    border-radius: 0.5rem;
+    border: 1px solid var(--code-border);
   }
 
   .nav-link {
+    transition: all 0.2s ease;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
     color: var(--muted);
-    @apply transition-colors duration-200 px-3 py-2 rounded-lg text-sm font-medium;
   }
   .nav-link:hover {
     color: var(--foreground);
+    background-color: rgba(147, 80, 115, 0.15);
   }
 
   .nav-link-active {
-    @apply bg-flux-blue/10;
-    color: theme('colors.flux.blue');
+    background-color: var(--accent-purple);
+    color: var(--accent-ivory);
   }
 
   .toc-link {
+    transition: color 0.2s ease;
+    padding: 0.25rem 0;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 1rem;
     color: var(--muted);
-    @apply transition-colors duration-200 py-1 block border-l-2 border-transparent pl-4;
   }
   .toc-link:hover {
-    color: theme('colors.flux.blue');
+    color: var(--accent-peach);
   }
 
   .toc-link-active {
-    @apply border-flux-blue;
-    color: theme('colors.flux.blue');
+    border-left-color: var(--accent-peach);
+    color: var(--accent-peach);
   }
 
   .breadcrumb-link {
+    transition: color 0.2s;
     color: var(--muted);
-    @apply transition-colors;
   }
   .breadcrumb-link:hover {
-    color: theme('colors.flux.blue');
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .text-foreground {
-    color: var(--foreground);
+    color: var(--accent-peach);
   }
 
   .text-muted-foreground {
@@ -150,65 +191,88 @@
   }
 }
 
-/* Fumadocs overrides */
+/* ==========================================================================
+   FUMADOCS DARK UI OVERRIDES
+   ========================================================================== */
 #nd-sidebar {
-  background-color: #0d0d14 !important;
-  border-right: 1px solid #1e1e2e !important;
+  background-color: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 #nd-sidebar a {
-  color: #9ca3af !important;
+  color: var(--muted) !important;
+}
+
+#nd-sidebar a:hover {
+  color: var(--foreground) !important;
+  background-color: rgba(147, 80, 115, 0.12) !important;
 }
 
 #nd-sidebar a[data-active="true"] {
-  color: #8bcefc !important;
-  background-color: rgba(139, 206, 252, 0.1) !important;
+  color: var(--accent-peach) !important;
+  background-color: rgba(147, 80, 115, 0.25) !important;
+  font-weight: 600 !important;
 }
 
 #nd-toc {
-  border-left: 1px solid #1e1e2e !important;
+  border-left: 1px solid var(--border) !important;
+}
+
+#nd-subnav {
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .fumadocs-content h1,
 .fumadocs-content h2,
 .fumadocs-content h3,
 .fumadocs-content h4 {
-  color: #f1f5f9 !important;
+  color: var(--foreground) !important;
   scroll-margin-top: 6rem;
+  letter-spacing: -0.02em;
+}
+
+.fumadocs-content p,
+.fumadocs-content li {
+  color: var(--foreground);
 }
 
 .fumadocs-content a {
-  color: #8bcefc !important;
+  color: var(--accent-peach) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .fumadocs-content a:hover {
-  color: #a191f8 !important;
+  color: var(--accent-mauve) !important;
 }
 
 .fumadocs-content code {
-  color: #e7aafb !important;
-  background-color: #1c1c26 !important;
+  color: var(--inline-code-text) !important;
+  background-color: var(--inline-code-bg) !important;
   border-radius: 0.375rem;
   padding: 0.125rem 0.375rem;
+  font-size: 0.9em;
 }
 
 .fumadocs-content pre {
-  background-color: #16161e !important;
-  border: 1px solid #2e2e3a !important;
+  background-color: var(--code-bg) !important;
+  border: 1px solid var(--code-border) !important;
   border-radius: 0.75rem !important;
 }
 
 .fumadocs-content pre code {
   background: none !important;
   padding: 0 !important;
-  color: inherit !important;
+  color: var(--foreground) !important;
 }
 
 .fumadocs-content blockquote {
-  border-left-color: #8bcefc !important;
-  background-color: rgba(139, 206, 252, 0.05) !important;
+  border-left-color: var(--accent-mauve) !important;
+  background-color: rgba(147, 80, 115, 0.15) !important;
   border-radius: 0 0.5rem 0.5rem 0;
   padding: 1rem 1.5rem;
+  color: var(--foreground);
 }
 
 .fumadocs-content table {
@@ -217,34 +281,35 @@
 }
 
 .fumadocs-content th {
-  background-color: #1c1c26;
-  color: #f1f5f9;
+  background-color: var(--card-bg);
+  color: var(--foreground);
   font-weight: 600;
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #2e2e3a;
+  border-bottom: 1px solid var(--border);
 }
 
 .fumadocs-content td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #1e1e2e;
+  border-bottom: 1px solid var(--border);
 }
 
 .fumadocs-content tr:hover {
-  background-color: #16161e;
+  background-color: var(--card-hover);
 }
 
 /* Search dialog */
 [data-search-dialog] {
-  background-color: #111118 !important;
-  border: 1px solid #2e2e3a !important;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 1rem !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
 }
 
 [data-search-dialog] input {
-  background-color: #1c1c26 !important;
-  border-color: #2e2e3a !important;
-  color: #e2e8f0 !important;
+  background-color: var(--code-bg) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
 }
 
 /* Animation classes */
@@ -265,13 +330,13 @@
 /* Mermaid diagram dark theme */
 .mermaid svg {
   background-color: transparent !important;
-  filter: brightness(0.85) saturate(1.2);
+  filter: brightness(0.9) saturate(1.2);
 }
 
 .mermaid .label {
-  color: #e2e8f0 !important;
+  color: var(--foreground) !important;
 }
 
 .mermaid .cluster-label span {
-  color: #e2e8f0 !important;
+  color: var(--foreground) !important;
 }

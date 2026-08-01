@@ -12,10 +12,11 @@ const FLUX_ASCII = [
 ]
 
 const GRADIENT_COLORS = [
-  '#e7aafb',
-  '#a191f8',
-  '#8bcefc',
-  '#7fe4eb',
+  '#884d90ff',  // deep purple
+  '#c76f9dff',  // muted mauve
+  '#F6DBC0',  // warm peach / cream
+  '#F8F4E9',  // off-white / ivory
+  '#c66fd1ff',  // deep purple
 ]
 
 function interpolateColor(colors: string[], factor: number): string {
