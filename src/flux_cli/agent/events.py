@@ -2,8 +2,8 @@ from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import Any
-from client.response import TokenUsage
-from tools.base import ToolResult
+from flux_cli.client.response import TokenUsage
+from flux_cli.tools.base import ToolResult
 
 class AgentEventType(str, Enum):
     #Agent LifeCycle

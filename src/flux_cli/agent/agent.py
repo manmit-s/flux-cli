@@ -1,12 +1,12 @@
 from __future__ import annotations
 import json
 from typing import AsyncGenerator, Awaitable, Callable
-from agent.events import AgentEvent, AgentEventType
-from agent.session import Session
-from client.response import StreamEventType, TokenUsage, ToolCall, ToolResultMessage
-from config.config import Config
-from prompts.system import create_loop_breaker_prompt
-from tools.base import ToolConfirmation
+from flux_cli.agent.events import AgentEvent, AgentEventType
+from flux_cli.agent.session import Session
+from flux_cli.client.response import StreamEventType, TokenUsage, ToolCall, ToolResultMessage
+from flux_cli.config.config import Config
+from flux_cli.prompts.system import create_loop_breaker_prompt
+from flux_cli.tools.base import ToolConfirmation
 
 
 class Agent:

@@ -5,8 +5,8 @@ import json
 import os
 import re
 from typing import Any
-from client.response import TokenUsage
-from config.loader import get_data_dir
+from flux_cli.client.response import TokenUsage
+from flux_cli.config.loader import get_data_dir
 
 
 @dataclass

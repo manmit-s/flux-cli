@@ -3,17 +3,17 @@ import json
 from typing import Any
 import uuid
 
-from client.llm_client import LLMClient
-from config.config import Config
-from config.loader import get_data_dir
-from context.compaction import ChatCompactor
-from context.loop_detector import LoopDetector
-from context.manager import ContextManager
-from hooks.hook_system import HookSystem
-from tools.discovery import ToolDiscoveryManager
-from tools.mcp.mcp_manager import MCPManager
-from tools.registry import create_default_registry
-from safety.approval import ApprovalManager
+from flux_cli.client.llm_client import LLMClient
+from flux_cli.config.config import Config
+from flux_cli.config.loader import get_data_dir
+from flux_cli.context.compaction import ChatCompactor
+from flux_cli.context.loop_detector import LoopDetector
+from flux_cli.context.manager import ContextManager
+from flux_cli.hooks.hook_system import HookSystem
+from flux_cli.tools.discovery import ToolDiscoveryManager
+from flux_cli.tools.mcp.mcp_manager import MCPManager
+from flux_cli.tools.registry import create_default_registry
+from flux_cli.safety.approval import ApprovalManager
 
 
 class Session:
