@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flux-cli-ai"
-version = "0.1.9"
+version = "0.2.0"
 description = "A powerful agentic AI coding CLI built with Python and Rich TUI"
 readme = "README.md"
 authors = [{ name = "Manmit", email = "work.manmit.samal@zohomail.in" }]
@@ -34,5 +34,5 @@ Repository = "https://github.com/manmit-s"
 flux = "flux_cli.main:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["flux_cli*"]
