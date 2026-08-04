@@ -1,13 +1,13 @@
 from datetime import datetime
 from typing import Any
 
-from client.response import TokenUsage
-from config.config import Config
-from prompts.system import get_system_prompt
+from flux_cli.client.response import TokenUsage
+from flux_cli.config.config import Config
+from flux_cli.prompts.system import get_system_prompt
 from dataclasses import dataclass, field
 
-from tools.base import Tools
-from utils.text import count_tokens
+from flux_cli.tools.base import Tools
+from flux_cli.utils.text import count_tokens
 
 @dataclass
 class MessageItem:

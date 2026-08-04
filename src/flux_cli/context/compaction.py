@@ -1,10 +1,10 @@
 import logging
 from typing import Any
 
-from client.llm_client import LLMClient
-from client.response import StreamEventType, TokenUsage
-from context.manager import ContextManager
-from prompts.system import get_compression_prompt
+from flux_cli.client.llm_client import LLMClient
+from flux_cli.client.response import StreamEventType, TokenUsage
+from flux_cli.context.manager import ContextManager
+from flux_cli.prompts.system import get_compression_prompt
 
 logger = logging.getLogger(__name__)
 
