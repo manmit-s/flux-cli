@@ -1,17 +1,17 @@
 from pathlib import Path
 import sys
 from typing import Any
-from agent.agent import Agent
-from agent.events import AgentEventType
-from agent.persistence import PersistenceManager, SessionSnapshot
-from agent.session import Session
-from client.llm_client import LLMClient
+from flux_cli.agent.agent import Agent
+from flux_cli.agent.events import AgentEventType
+from flux_cli.agent.persistence import PersistenceManager, SessionSnapshot
+from flux_cli.agent.session import Session
+from flux_cli.client.llm_client import LLMClient
 import asyncio
 import click
 
-from config.config import ApprovalPolicy, Config
-from config.loader import load_config
-from ui.tui import TUI, get_console
+from flux_cli.config.config import ApprovalPolicy, Config
+from flux_cli.config.loader import load_config
+from flux_cli.ui.tui import TUI, get_console
 import dotenv
 import warnings
 
@@ -337,7 +337,7 @@ class CLI:
 async def run(messages: dict[str, Any]):
     pass
 
-from config.setup import run_config_wizard
+from flux_cli.config.setup import run_config_wizard
 
 
 @click.command()
