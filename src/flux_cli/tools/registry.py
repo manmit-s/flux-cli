@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Any
-from config.config import Config
-from hooks.hook_system import HookSystem
-from safety.approval import ApprovalContext, ApprovalDecision, ApprovalManager
-from tools.base import Tools, ToolInvocation, ToolResult
+from flux_cli.config.config import Config
+from flux_cli.hooks.hook_system import HookSystem
+from flux_cli.safety.approval import ApprovalContext, ApprovalDecision, ApprovalManager
+from flux_cli.tools.base import Tools, ToolInvocation, ToolResult
 import logging
-from tools.builtin import ReadFileTool, get_all_builtin_tools
-from tools.subagent import SubAgentTool, get_default_subagent_definitions
+from flux_cli.tools.builtin import ReadFileTool, get_all_builtin_tools
+from flux_cli.tools.subagent import SubAgentTool, get_default_subagent_definitions
 
 logger = logging.getLogger(__name__)
 

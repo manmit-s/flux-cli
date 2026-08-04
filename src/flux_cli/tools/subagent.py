@@ -4,8 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from config.config import Config
-from tools.base import ToolInvocation, ToolResult, Tools
+from flux_cli.config.config import Config
+from flux_cli.tools.base import ToolInvocation, ToolResult, Tools
 
 class SubAgentParams(BaseModel):
     goal: str = Field(..., description = 'The specific task for a goal for the sub-agent to accomplish')
@@ -40,8 +40,8 @@ class SubAgentTool(Tools):
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         #Lazy Importing
-        from agent.agent import Agent
-        from agent.events import AgentEventType
+        from flux_cli.agent.agent import Agent
+        from flux_cli.agent.events import AgentEventType
         params = SubAgentParams(**invocation.params)
 
         if not params.goal:

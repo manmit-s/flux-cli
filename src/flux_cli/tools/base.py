@@ -8,7 +8,7 @@ from pydantic.json_schema import model_json_schema
 from enum import Enum
 from typing import Any
 
-from config.config import Config
+from flux_cli.config.config import Config
 
 class ToolKind(str, Enum):
     READ = "read"

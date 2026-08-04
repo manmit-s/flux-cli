@@ -1,0 +1,107 @@
+from pydantic import BaseModel, Field
+
+from flux_cli.tools.base import FileDiff, ToolConfirmation, ToolInvocation, ToolKind, ToolResult, Tools
+from flux_cli.utils.paths import ensure_parent_directory, is_within_directory, resolve_path
+
+
+class WriteFileParams(BaseModel):
+    path: str = Field(
+        ..., description = 'Path to the file to write (relative to the working directory or absolute)'
+    )
+    content: str = Field(
+        ..., description='Content to write to the file'
+    )
+    create_directories: bool = Field(
+        True, description='Create parent directories if they dont exist'
+    )
+
+class WriteFileTool(Tools):
+    name = 'write_file'
+    description = (
+        "Write content to a file. Creates the file if it doesn't exist, "
+        "or overwrites if it does. Parent directories are created automatically. "
+        "Use this for creating new files or completely replacing file contents. "
+        "For partial modifications, use the edit tool instead."
+    )
+    kind = ToolKind.WRITE
+    schema = WriteFileParams
+
+    async def get_confirmation(self, invocation: ToolInvocation) -> ToolConfirmation | None:
+        params = WriteFileParams(**invocation.params)
+        path = resolve_path(invocation.cwd, params.path)
+        if not is_within_directory(path, invocation.cwd):
+            return ToolConfirmation(
+                tool_name=self.name,
+                params=invocation.params,
+                description=f"Refuse write outside working directory: {path}",
+                affected_paths=[path],
+                is_dangerous=True,
+            )
+        is_new_file = not path.exists()
+        old_content = ""
+        if not is_new_file:
+            try:
+                old_content = path.read_text(encoding='utf-8')
+            except:
+                pass
+        diff = FileDiff(
+            path=path,
+            old_content=old_content,
+            new_content=params.content,
+            is_new_file=is_new_file,
+        )
+        action = "Created" if is_new_file else "Updated"
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.params,
+            description=f"{action} file: {path}",
+            diff=diff,
+            affected_paths=[path],
+            is_dangerous=not is_new_file,
+        )
+
+
+    async def execute(self, invocation: ToolInvocation) -> ToolResult:
+        params = WriteFileParams(**invocation.params)
+        path = resolve_path(invocation.cwd, params.path)
+
+        if not is_within_directory(path, invocation.cwd) and not invocation.approved:
+            return ToolResult.error_result(f"Path is outside working directory: {path}")
+
+        is_new_file = not path.exists()
+        old_content = ""
+
+        if not is_new_file:
+            try:
+                old_content = path.read_text(encoding='utf-8')
+            except:
+                pass
+
+        try: 
+            if params.create_directories:
+                ensure_parent_directory(path)
+            elif not path.parent.exists():
+                return ToolResult.error_result(f"Parent directort doesn't exist: {path.parent}")
+            
+            action = "Created" if is_new_file else "Updated"
+            line_count = len(params.content.splitlines())
+
+            path.write_text(params.content, encoding='utf-8')
+            return ToolResult.success_result(
+                f"{action} {path} {line_count} lines",
+                diff = FileDiff(
+                    path = path,
+                    old_content=old_content,
+                    new_content=params.content,
+                    is_new_file=is_new_file
+                ),
+                metadata = {
+                    'path' : str(path),
+                    'is_new_file' : is_new_file,
+                    'lines' : line_count,
+                    'bytes' : len(params.content.encode('utf-8'))
+                }
+            )
+        except OSError as e:
+            return ToolResult.error_result(f"Failed to write: {e}")

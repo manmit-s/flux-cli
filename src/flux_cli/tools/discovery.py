@@ -3,10 +3,10 @@ import inspect
 from pathlib import Path
 import sys
 from typing import Any
-from config.config import Config
-from config.loader import get_config_dir
-from tools.base import Tools
-from tools.registry import ToolRegistry
+from flux_cli.config.config import Config
+from flux_cli.config.loader import get_config_dir
+from flux_cli.tools.base import Tools
+from flux_cli.tools.registry import ToolRegistry
 
 
 class ToolDiscoveryManager:
