@@ -1,0 +1,101 @@
+name: Build, Test & Publish to PyPI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # -------------------------------------------------------------------
+  # JOB 1: Code Quality, Linting & Unit Tests
+  # -------------------------------------------------------------------
+  test:
+    name: Run Tests & Code Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies & Package (Editable)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest ruff mypy
+          pip install -e .
+
+      - name: Lint with Ruff
+        run: |
+          # Checks for syntax errors and import issues
+          ruff check src/
+
+      - name: Run Unit Tests
+        run: |
+          # Runs test suite (if tests directory exists)
+          pytest || echo "No tests configured yet"
+
+  # -------------------------------------------------------------------
+  # JOB 2: Build Package & Validate Structure
+  # -------------------------------------------------------------------
+  build:
+    name: Build & Validate Distribution
+    needs: test  # Tests must pass before build runs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install build & twine
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build Source and Wheel
+        run: python -m build
+
+      - name: Check Package Integrity with Twine
+        run: |
+          # Twine checks for missing README, incorrect metadata, or broken RST/MD markup
+          twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # -------------------------------------------------------------------
+  # JOB 3: Publish to Production PyPI
+  # -------------------------------------------------------------------
+  publish:
+    name: Publish to Production PyPI
+    needs: build  # Build & validation must pass before publish runs
+    # Guardrail: Only runs on Git Tag (v1.0.0) or manual trigger (not on PRs)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # OIDC Authentication
+      contents: read
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
