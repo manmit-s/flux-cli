@@ -6,8 +6,8 @@ from openai import AsyncOpenAI
 from openai import APIConnectionError
 from openai import RateLimitError
 from openai import APIError
-from client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage, ToolCall, ToolCallDelta, parse_tool_call_arguments
-from config.config import Config
+from flux_cli.client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage, ToolCall, ToolCallDelta, parse_tool_call_arguments
+from flux_cli.config.config import Config
 
 dotenv.load_dotenv()
 
