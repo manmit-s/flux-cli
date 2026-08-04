@@ -41,8 +41,5 @@ docs/out/
 docs/.source/
 docs/tsconfig.tsbuildinfo
 
-# For PYPI
-flux_cli
-
-# Import fixing
-scratch/
+# For PYPI (root-level only, don't ignore src/flux_cli/)
+/flux_cli
