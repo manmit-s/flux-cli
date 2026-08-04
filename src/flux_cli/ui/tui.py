@@ -14,13 +14,13 @@ from rich.prompt import Prompt
 from rich.markdown import Markdown
 from rich.live import Live
 
-from config.config import Config
-from tools.base import ToolConfirmation
-from utils.paths import display_path_rel_to_cwd
+from flux_cli.config.config import Config
+from flux_cli.tools.base import ToolConfirmation
+from flux_cli.utils.paths import display_path_rel_to_cwd
 
 import re
-from tools.builtin.todo import ToDoTool
-from utils.text import truncate_text
+from flux_cli.tools.builtin.todo import ToDoTool
+from flux_cli.utils.text import truncate_text
 
 AGENT_THEME = Theme(
     {
