@@ -7,8 +7,8 @@ import signal
 import sys
 import tempfile
 from typing import Any
-from config.config import Config, HookConfig, HookTrigger
-from tools.base import ToolResult
+from flux_cli.config.config import Config, HookConfig, HookTrigger
+from flux_cli.tools.base import ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -173,4 +173,4 @@ class HookSystem:
 
         for hook in self.hooks:
             if hook.trigger == HookTrigger.ON_ERROR:
-                await self._run_hook(hook, env)
+                await self._run_hook(hook, env)
