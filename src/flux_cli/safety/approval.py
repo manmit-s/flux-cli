@@ -5,8 +5,8 @@ from pathlib import Path
 import re
 from typing import Any, Awaitable, Callable
 
-from config.config import ApprovalPolicy
-from tools.base import ToolConfirmation
+from flux_cli.config.config import ApprovalPolicy
+from flux_cli.tools.base import ToolConfirmation
 
 class ApprovalDecision(str, Enum):
     APPROVED = 'approved'
