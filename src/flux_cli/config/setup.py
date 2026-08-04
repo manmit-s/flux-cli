@@ -6,7 +6,7 @@ from rich.prompt import Prompt
 from rich.panel import Panel
 from rich import box
 from rich.text import Text
-from config.loader import get_config_dir, get_system_config_path
+from flux_cli.config.loader import get_config_dir, get_system_config_path
 
 console = Console()
 

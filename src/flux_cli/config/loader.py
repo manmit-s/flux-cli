@@ -7,9 +7,9 @@ try:
 except ImportError:
     import tomli as tomllib
 
-from config.config import Config
+from flux_cli.config.config import Config
 
-from utils.errors import ConfigError
+from flux_cli.utils.errors import ConfigError
 
 import logging
 
