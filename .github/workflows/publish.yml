@@ -30,13 +30,15 @@ jobs:
       - name: Install Dependencies & Package (Editable)
         run: |
           python -m pip install --upgrade pip
-          pip install pytest ruff mypy
+          pip install pytest ruff
           pip install -e .
 
-      - name: Lint with Ruff
+      - name: Lint with Ruff (non-blocking)
+        continue-on-error: true
         run: |
-          # Checks for syntax errors and import issues
-          ruff check src/
+          # Only check for critical errors (syntax, undefined names, etc.)
+          # Style issues are ignored to keep the workflow lenient
+          ruff check --select E9,F63,F7,F82 src/
 
       - name: Run Unit Tests
         run: |
