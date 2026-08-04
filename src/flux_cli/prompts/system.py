@@ -1,7 +1,7 @@
 from datetime import datetime
 import platform
-from config.config import Config
-from tools.base import Tools
+from flux_cli.config.config import Config
+from flux_cli.tools.base import Tools
 
 def get_system_prompt(
     config: Config,
