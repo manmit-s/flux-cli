@@ -17,6 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 import { RootProvider } from 'fumadocs-ui/provider/next'
+import { basePath } from '@/lib/base-path'
 
 export const metadata: Metadata = defaultMetadata
 
@@ -31,7 +32,16 @@ export default function RootLayout({
         <link rel="icon" href="/flux-cli/favicon.ico" sizes="any" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background`}>
-        <RootProvider>{children}</RootProvider>
+        <RootProvider
+          search={{
+            options: {
+              type: 'static',
+              api: `${basePath}/api/search`,
+            },
+          }}
+        >
+          {children}
+        </RootProvider>
       </body>
     </html>
   )
