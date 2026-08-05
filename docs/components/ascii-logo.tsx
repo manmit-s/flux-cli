@@ -52,7 +52,12 @@ interface AsciiLogoProps {
 }
 
 export function AsciiLogo({ size = 'md', animated = true }: AsciiLogoProps) {
-  const fontSize = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-lg' : 'text-sm'
+  const fontSize =
+    size === 'sm'
+      ? 'text-[8px] sm:text-xs'
+      : size === 'lg'
+        ? 'text-[10px] sm:text-base md:text-lg'
+        : 'text-[9px] sm:text-sm'
   const maxLen = Math.max(...FLUX_ASCII.map((l) => l.length))
 
   return (

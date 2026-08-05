@@ -340,3 +340,53 @@
 .mermaid .cluster-label span {
   color: var(--foreground) !important;
 }
+
+/* ==========================================================================
+   RESPONSIVE MOBILE / TABLET SAFEGUARDS
+   (Desktop unaffected — all rules use breakpoints below `lg`.)
+   ========================================================================== */
+
+/* Ensure images and mermaid SVGs never exceed the viewport width */
+.fumadocs-content img,
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Wrap wide tables in a horizontal scroll container on mobile only */
+@media (max-width: 768px) {
+  .fumadocs-content table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Responsive heading sizing for mobile */
+@media (max-width: 640px) {
+  .fumadocs-content h1 {
+    font-size: 1.75rem;
+  }
+  .fumadocs-content h2 {
+    font-size: 1.4rem;
+  }
+  .fumadocs-content h3 {
+    font-size: 1.15rem;
+  }
+  .fumadocs-content pre {
+    font-size: 0.8rem;
+  }
+  .fumadocs-content {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+}
+
+/* Slightly reduce code font on tablets */
+@media (max-width: 768px) {
+  .fumadocs-content pre {
+    font-size: 0.85rem;
+  }
+}

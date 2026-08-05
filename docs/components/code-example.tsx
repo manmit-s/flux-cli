@@ -49,9 +49,9 @@ export function CodeExample({
       )}
 
       <div className="relative group">
-        <button
+<button
           onClick={handleCopy}
-          className="absolute top-3 right-3 p-2 rounded-lg bg-surface-300/50 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-surface-400/50 z-10"
+          className="absolute top-3 right-3 p-2 rounded-lg bg-surface-300/70 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-surface-400/50 z-10"
           aria-label="Copy code"
         >
           {copied ? (
